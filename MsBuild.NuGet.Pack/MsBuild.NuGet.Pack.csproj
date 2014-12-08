@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FB4A02BC-C768-41A0-AF4C-A399079CE96B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MsBuild.NuGet.Pack</RootNamespace>
+    <AssemblyName>MsBuild.NuGet.Pack</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BuildNuSpecTask.cs" />
+    <Compile Include="MergeNuSpecTask.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="content\MsBuild.NuGet.Pack.DeleteMe.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="MsBuild.NuGet.Pack.nuspec">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="tools\Install.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tools\MsBuild.NuGet.Pack.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tools\Uninstall.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\packages\NuGet.CommandLine.2.8.3\tools\NuGet.exe">
+      <Link>tools\NuGet.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  -->
+  <UsingTask TaskName="InsertDummyContent" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <TargetPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.IO.Compression" />
+      <Using Namespace="System.IO.Compression" />
+      <Code Type="Fragment" Language="cs"><![CDATA[        
+        const int BufferSize = 64 * 1024;
+ 
+        var files = Directory.GetFiles(TargetPath, "*.nupkg");
+        
+        foreach (var file in files)
+        {
+            var buffer = new byte[BufferSize];
+            var fileMode = FileMode.Open;
+ 
+            using (var outputFileStream = new FileStream(file, FileMode.Open))
+            {
+				using (var archive = new ZipArchive(outputFileStream, ZipArchiveMode.Update))
+				{
+					var firstEntry = archive.CreateEntry(@"content\net35\_._");
+					
+					using (var firstStream = firstEntry.Open())
+					{
+						firstStream.Flush();
+					}
+					
+					var secondEntry = archive.CreateEntry(@"content\net40\_._");
+					
+					using (var secondStream = secondEntry.Open())
+					{
+						secondStream.Flush();
+					}
+					
+					var thirdEntry = archive.CreateEntry(@"content\netcore45\_._");
+					
+					using (var thirdStream = thirdEntry.Open())
+					{
+						thirdStream.Flush();
+					}
+					
+					var contentTypesEntry = archive.GetEntry("[Content_Types].xml");		
+					string entryContent;
+					
+					using (var contentReadStream = contentTypesEntry.Open())
+					{
+						using (var contentTypesReader = new StreamReader(contentReadStream))
+						{
+							entryContent = contentTypesReader.ReadToEnd();
+						}
+					}
+										
+					entryContent = entryContent.Replace("</Types>", "<Default Extension=\"_\" ContentType=\"application/octet\" /></Types>");
+					
+					using (var contentWriteStream = contentTypesEntry.Open())
+					{
+						using (var writer = new StreamWriter(contentWriteStream))
+						{
+							writer.Write(entryContent);
+						}
+					}
+				}
+            } 
+        }         
+      ]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="CreateNuGetPackage">
+    <PropertyGroup>
+      <NuGetPath>$(MSBuildThisFileDirectory)..\packages\NuGet.CommandLine.2.8.3\tools\nuget.exe</NuGetPath>
+      <NuSpecPath>$(TargetDir)\$(MSBuildProjectName).nuspec</NuSpecPath>
+      <PackagePath>$(TargetDir)\$(MSBuildProjectName).nupkg</PackagePath>
+    </PropertyGroup>
+    <Error Condition="!Exists($(NuGetPath))" Text="The NuGet commandline was not found at '$(NuGetPath)'" />
+    <Exec Command="$(NuGetPath) pack &quot;$(NuSpecPath)&quot;" WorkingDirectory="$(TargetDir)" ConsoleToMSBuild="True" />
+    <!-- Add a _._ to content in the nupkg
+    <InsertDummyContent TargetPath="$(TargetDir)" /> -->
+  </Target>
+  <Target Name="AfterBuild">
+    <CallTarget Targets="CreateNuGetPackage" />
+  </Target>
+</Project>

@@ -1,0 +1,1 @@
+﻿This file was installed by the MsBuild.NuGet.Pack NuGet package and should have been removed when the package was installed. You can safely delete this file.

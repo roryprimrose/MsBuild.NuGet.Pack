@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>MsBuild.NuGet.Pack</id>
+    <title>MsBuild NuGet Packager</title>
+    <version>1.0.0</version>
+    <authors>Rory Primrose</authors>
+    <owners>Rory Primrose</owners>
+    <summary>Includes MSBuild support for generating NuGet packages for a project.</summary>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      This package contains the msbuild support for packaging a NuGet package for a project.
+    </description>
+    <tags>msbuild nuget</tags>
+    <developmentDependency>true</developmentDependency>
+  </metadata>
+  <files>
+    <file src="content\*" target="content" />
+    <file src="tools\*" target="tools" />
+    <file src="MsBuild.NuGet.Pack.*" target="tools" />
+  </files>
+</package>
