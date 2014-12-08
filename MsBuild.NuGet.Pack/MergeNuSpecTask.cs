@@ -392,9 +392,9 @@
         {
             BuildEngine.LogMessageEvent(
                 new BuildMessageEventArgs(
-                    "MergeNuSpecTask: " + message, 
-                    "MergeNuSpecTask", 
-                    "MergeNuSpecTask", 
+                    "MergeNuSpecTask: " + message,
+                    "MergeNuSpecTask",
+                    "MergeNuSpecTask",
                     importance));
         }
 
@@ -427,9 +427,9 @@
 
             files.Add(
                 new XElement(
-                    defaultNamespace + "file", 
-                    new XAttribute("src", srcValue), 
-                    new XAttribute("target", "lib" + frameworkFolder), 
+                    defaultNamespace + "file",
+                    new XAttribute("src", srcValue),
+                    new XAttribute("target", "lib" + frameworkFolder),
                     new XAttribute("exclude", excludeValue)));
         }
 
@@ -450,7 +450,22 @@
             var metadata = GetSpecMetadata(nuSpecDocument);
 
             SetElementValue(metadata, "title", info.ProductName);
-            SetElementValue(metadata, "version", info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart);
+
+            string version;
+
+            if (IncludeBuildVersion)
+            {
+                version = info.ProductVersion;
+            }
+            else
+            {
+                version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
+            }
+
+            SetElementValue(
+                metadata,
+                "version",
+                version);
             SetElementValueIfEmpty(metadata, "summary", info.Comments);
             SetElementValueIfEmpty(metadata, "description", info.FileDescription);
 
@@ -492,8 +507,8 @@
                     // We need to add the package dependency into the nuspec file
                     specDependencies.Add(
                         new XElement(
-                            defaultNamespace + "dependency", 
-                            new XAttribute("id", id), 
+                            defaultNamespace + "dependency",
+                            new XAttribute("id", id),
                             new XAttribute("version", version)));
                 }
                 else
@@ -554,6 +569,19 @@
 
         /// <inheritdoc />
         public ITaskHost HostObject
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets a value indicating whether the package should include the build number.
+        /// </summary>
+        /// <value>
+        ///     <c>true</c> if the package should include the build number; otherwise, <c>false</c>.
+        /// </value>
+        [Required]
+        public bool IncludeBuildVersion
         {
             get;
             set;

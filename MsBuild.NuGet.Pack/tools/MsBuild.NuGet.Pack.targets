@@ -17,6 +17,8 @@
     <MsBuildNuGetPackImported>true</MsBuildNuGetPackImported>
 
     <RunNuGetPack Condition="'$(RunNuGetPack)'==''">false</RunNuGetPack>
+    <IncludeBuildVersion Condition="'$(IncludeBuildVersion)'==''">false</IncludeBuildVersion>
+    
     <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(MSBuildThisFileDirectory)\nuget.exe</NuGetExePath>
 	  <NuSpecFileName Condition="'$(NuSpecFileName)' == ''">$(MSBuildProjectName).nuspec</NuSpecFileName>
     <ProjectFile Condition="'$(ProjectFile)' == ''">$(MSBuildProjectFile)</ProjectFile>
@@ -37,6 +39,7 @@
       ProjectDirectory="$(ProjectDirectory)"
       ProjectFile="$(ProjectFile)"
       PrimaryOutputAssembly="$(TargetPath)"
+      IncludeBuildVersion="$(IncludeBuildVersion)"
       TargetFrameworkVersion="$(TargetFrameworkVersion)"
       TargetFrameworkProfile="$(TargetFrameworkProfile)" />
 	

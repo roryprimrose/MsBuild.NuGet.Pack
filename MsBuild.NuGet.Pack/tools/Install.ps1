@@ -76,6 +76,7 @@
 	<!-- Set this to false if you don't need to support a license -->
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
 
+	<releaseNotes></releaseNotes>
 	<tags></tags>
 	
     <dependencies>
