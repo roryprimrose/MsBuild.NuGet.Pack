@@ -3,10 +3,11 @@
   <metadata>
     <id>MsBuild.NuGet.Pack</id>
     <title>MsBuild NuGet Packager</title>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <authors>Rory Primrose</authors>
     <owners>Rory Primrose</owners>
     <summary>Includes MSBuild support for generating NuGet packages for a project.</summary>
+    <projectUrl>https://github.com/roryprimrose/MsBuild.NuGet.Pack</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
       This package contains the msbuild support for packaging a NuGet package for a project.
