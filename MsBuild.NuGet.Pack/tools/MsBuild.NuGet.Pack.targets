@@ -18,6 +18,7 @@
 
     <RunNuGetPack Condition="'$(RunNuGetPack)'==''">false</RunNuGetPack>
     <IncludeBuildVersion Condition="'$(IncludeBuildVersion)'==''">false</IncludeBuildVersion>
+    <UseBuildVersionAsPatch Condition="'$(UseBuildVersionAsPatch)'==''">false</UseBuildVersionAsPatch>
     
     <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(MSBuildThisFileDirectory)\nuget.exe</NuGetExePath>
 	  <NuSpecFileName Condition="'$(NuSpecFileName)' == ''">$(MSBuildProjectName).nuspec</NuSpecFileName>
@@ -40,6 +41,7 @@
       ProjectFile="$(ProjectFile)"
       PrimaryOutputAssembly="$(TargetPath)"
       IncludeBuildVersion="$(IncludeBuildVersion)"
+      UseBuildVersionAsPatch="$(UseBuildVersionAsPatch)"
       TargetFrameworkVersion="$(TargetFrameworkVersion)"
       TargetFrameworkProfile="$(TargetFrameworkProfile)" />
 	

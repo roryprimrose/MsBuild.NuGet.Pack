@@ -392,9 +392,9 @@
         {
             BuildEngine.LogMessageEvent(
                 new BuildMessageEventArgs(
-                    "MergeNuSpecTask: " + message,
-                    "MergeNuSpecTask",
-                    "MergeNuSpecTask",
+                    "MergeNuSpecTask: " + message, 
+                    "MergeNuSpecTask", 
+                    "MergeNuSpecTask", 
                     importance));
         }
 
@@ -427,9 +427,9 @@
 
             files.Add(
                 new XElement(
-                    defaultNamespace + "file",
-                    new XAttribute("src", srcValue),
-                    new XAttribute("target", "lib" + frameworkFolder),
+                    defaultNamespace + "file", 
+                    new XAttribute("src", srcValue), 
+                    new XAttribute("target", "lib" + frameworkFolder), 
                     new XAttribute("exclude", excludeValue)));
         }
 
@@ -457,15 +457,16 @@
             {
                 version = info.ProductVersion;
             }
+            else if (UseBuildVersionAsPatch)
+            {
+                version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
+            }
             else
             {
                 version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
             }
 
-            SetElementValue(
-                metadata,
-                "version",
-                version);
+            SetElementValue(metadata, "version", version);
             SetElementValueIfEmpty(metadata, "summary", info.Comments);
             SetElementValueIfEmpty(metadata, "description", info.FileDescription);
 
@@ -507,8 +508,8 @@
                     // We need to add the package dependency into the nuspec file
                     specDependencies.Add(
                         new XElement(
-                            defaultNamespace + "dependency",
-                            new XAttribute("id", id),
+                            defaultNamespace + "dependency", 
+                            new XAttribute("id", id), 
                             new XAttribute("version", version)));
                 }
                 else
@@ -653,6 +654,19 @@
         /// </value>
         [Required]
         public string TargetFrameworkVersion
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets a value indicating whether the assembly build version should be used as the semver patch version.
+        /// </summary>
+        /// <value>
+        ///     <c>true</c> if the assembly build version should be used as the semver patch version; otherwise, <c>false</c>.
+        /// </value>
+        [Required]
+        public bool UseBuildVersionAsPatch
         {
             get;
             set;
