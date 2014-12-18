@@ -91,7 +91,7 @@
   <files>
 	<!-- This will automatically add the binary output of this project at compile time.
 	It will inject a file element like the following:		
-    <file src="**\$($project.Name).*" target="lib/[targetFramework]" exclude="$($project.Name).*.CodeAnalysisLog.xml;$($project.Name).*.lastcodeanalysissucceeded" />
+    <file src="**\$($project.Name).*" target="lib/[targetFramework]" exclude="$($project.Name).*.CodeAnalysisLog.xml;$($project.Name).*.lastcodeanalysissucceeded;*Test*.*" />
 	The targetFramework value will be determined by the target framework of the project
 	-->
 

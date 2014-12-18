@@ -416,10 +416,10 @@
             var defaultNamespace = document.Root.GetDefaultNamespace();
             var outputName = Path.GetFileNameWithoutExtension(primaryOutputAssembly);
             var srcValue = "**\\" + outputName + ".*";
-            var excludeValue = "*.CodeAnalysisLog.xml;" + outputName + "*.lastcodeanalysissucceeded";
+            var excludeValue = "*.CodeAnalysisLog.xml;" + outputName + "*.lastcodeanalysissucceeded;*Test*.*";
             var targetFramework = GetTargetFramework(TargetFrameworkVersion, TargetFrameworkProfile);
             var frameworkFolder = string.Empty;
-
+            
             if (string.IsNullOrWhiteSpace(targetFramework) == false)
             {
                 frameworkFolder = "\\" + targetFramework;
