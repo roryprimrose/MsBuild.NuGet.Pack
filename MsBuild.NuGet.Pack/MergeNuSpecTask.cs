@@ -416,10 +416,9 @@
             var defaultNamespace = document.Root.GetDefaultNamespace();
             var outputName = Path.GetFileNameWithoutExtension(primaryOutputAssembly);
             var srcValue = "**\\" + outputName + ".*";
-            var excludeValue = "*.CodeAnalysisLog.xml;" + outputName + "*.lastcodeanalysissucceeded;*Test*.*";
             var targetFramework = GetTargetFramework(TargetFrameworkVersion, TargetFrameworkProfile);
             var frameworkFolder = string.Empty;
-            
+
             if (string.IsNullOrWhiteSpace(targetFramework) == false)
             {
                 frameworkFolder = "\\" + targetFramework;
@@ -429,8 +428,8 @@
                 new XElement(
                     defaultNamespace + "file", 
                     new XAttribute("src", srcValue), 
-                    new XAttribute("target", "lib" + frameworkFolder), 
-                    new XAttribute("exclude", excludeValue)));
+                    new XAttribute("target", "lib" + frameworkFolder),
+                    new XAttribute("exclude", FileExclusionPattern)));
         }
 
         /// <summary>
@@ -563,6 +562,19 @@
 
         /// <inheritdoc />
         public IBuildEngine BuildEngine
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets the file exclusion pattern.
+        /// </summary>
+        /// <value>
+        ///     The file exclusion pattern.
+        /// </value>
+        [Required]
+        public string FileExclusionPattern
         {
             get;
             set;
