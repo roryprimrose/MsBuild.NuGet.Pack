@@ -36,6 +36,10 @@
     
     <Error Condition="!Exists($(NuGetExePath))" Text="The NuGet commandline was not found at '$(NuGetExePath)'" />
 
+    <PropertyGroup>
+      <NugetPackageTargetDir Condition="'$(NugetPackageTargetDir)' == ''">$(TargetDir)</NugetPackageTargetDir>
+    </PropertyGroup>
+
     <MergeNuSpecTask
       NuSpecPath="$(NuSpecPath)"
       ProjectDirectory="$(ProjectDirectory)"
@@ -46,12 +50,12 @@
       FileExclusionPattern="$(FileExclusionPattern)"
       TargetFrameworkVersion="$(TargetFrameworkVersion)"
       TargetFrameworkProfile="$(TargetFrameworkProfile)" />
-	
+
     <BuildNuSpecTask
       NuGetPath="$(NuGetExePath)"
       NuSpecPath="$(NuSpecPath)"
       ProjectDirectory="$(ProjectDirectory)"
-      OutDir="$(TargetDir)" />
+      OutDir="$(NugetPackageTargetDir)" />
 
   </Target>
 </Project>
