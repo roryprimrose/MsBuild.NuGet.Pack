@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.DirectoryServices.AccountManagement;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -45,6 +46,27 @@
             return true;
         }
 
+
+        static string GetFullUserName()
+        {
+            try
+            {
+                return UserPrincipal.Current.DisplayName;
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
+            catch (NoMatchingPrincipalException)
+            {
+                return null;
+            }
+            catch (MultipleMatchesException)
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         ///     Gets the current user.
         /// </summary>
@@ -53,6 +75,9 @@
         /// </returns>
         private static string GetCurrentUser()
         {
+            var fullName = GetFullUserName();
+            if (!string.IsNullOrWhiteSpace(fullName))
+               return fullName;
             var fallbackUserName = Environment.UserName;
 
             if (Thread.CurrentPrincipal == null)
