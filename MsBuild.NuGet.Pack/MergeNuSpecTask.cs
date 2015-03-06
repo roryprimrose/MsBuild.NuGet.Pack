@@ -6,6 +6,9 @@
     using System.DirectoryServices.AccountManagement;
     using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Xml.Linq;
     using Microsoft.Build.Framework;
@@ -46,9 +49,24 @@
             return true;
         }
 
+    [DllImport("secur32.dll", CharSet = CharSet.Auto)]
+    private static extern int GetUserNameEx(int nameFormat, StringBuilder userNameBuffer, ref uint userNameBufferSize);
 
         static string GetFullUserName()
         {
+            var usernameBuffer = new StringBuilder(1024);
+            var bufferSize = (uint)usernameBuffer.Capacity;
+
+            // try to resolve the username locally
+            if (GetUserNameEx(3 /*NameDisplay*/, usernameBuffer, ref bufferSize) != 0)
+            {
+                var fullUserName = usernameBuffer.ToString();
+                if (string.IsNullOrWhiteSpace(fullUserName))
+                  return null;
+                // swap lastname, firstname
+                return Regex.Replace(fullUserName, @"\s*(\S+)\s*,\s*(\S+)\s*", "$2 $1");
+            }
+
             try
             {
                 return UserPrincipal.Current.DisplayName;
@@ -57,11 +75,7 @@
             {
                 return null;
             }
-            catch (NoMatchingPrincipalException)
-            {
-                return null;
-            }
-            catch (MultipleMatchesException)
+            catch (PrincipalException)
             {
                 return null;
             }
