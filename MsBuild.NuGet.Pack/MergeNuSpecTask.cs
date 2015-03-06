@@ -73,11 +73,14 @@
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        private static string GetCurrentUser()
+        private string GetCurrentUser()
         {
-            var fullName = GetFullUserName();
-            if (!string.IsNullOrWhiteSpace(fullName))
-               return fullName;
+            if (!DontUseWindowsDisplayName)
+            {
+                var fullName = GetFullUserName();
+                if (!string.IsNullOrWhiteSpace(fullName))
+                    return fullName; 
+            }
             var fallbackUserName = Environment.UserName;
 
             if (Thread.CurrentPrincipal == null)
@@ -707,6 +710,19 @@
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the task should not use <see cref="UserPrincipal.DisplayName"/> to get the full user name. (e.g. in situations with network problems)
+        /// </summary>
+        /// <value>
+        /// <c>false</c> Use <see cref="UserPrincipal.DisplayName"/> to get the full name, <c>true</c> not use <see cref="UserPrincipal.DisplayName"/>, uses the <see cref="System.Security.Principal.IPrincipal.Identity"/> of <see cref="Thread.CurrentPrincipal"/> or <see cref="Environment.UserName"/>
+        /// </value>
+        [Required]
+        public bool DontUseWindowsDisplayName
+        {
+          get;
+          set;
         }
     }
 }
