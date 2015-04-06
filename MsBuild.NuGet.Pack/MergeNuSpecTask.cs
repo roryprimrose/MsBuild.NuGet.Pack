@@ -12,7 +12,7 @@
     /// <summary>
     ///     The merge nu spec task.
     /// </summary>
-    public class MergeNuSpecTask : ITask
+    public class MergeNuSpecTask : NuSpecTask
     {
         /// <summary>
         ///     Executes a task.
@@ -21,7 +21,7 @@
         ///     true if the task executed successfully; otherwise, false.
         /// </returns>
         /// <inheritdoc />
-        public bool Execute()
+        public override bool Execute()
         {
             var packageConfig = Path.Combine(ProjectDirectory, "packages.config");
 
@@ -73,75 +73,6 @@
             }
 
             return currentUser;
-        }
-
-        /// <summary>
-        /// Gets the element.
-        /// </summary>
-        /// <param name="parent">
-        /// The parent.
-        /// </param>
-        /// <param name="elementName">
-        /// Name of the element.
-        /// </param>
-        /// <returns>
-        /// The <see cref="XElement"/>.
-        /// </returns>
-        private static XElement GetElement(XElement parent, string elementName)
-        {
-            var defaultNamespace = parent.Document.Root.GetDefaultNamespace();
-
-            var element = parent.Elements().SingleOrDefault(x => x.Name == defaultNamespace + elementName);
-
-            return element;
-        }
-
-        /// <summary>
-        /// Gets the element.
-        /// </summary>
-        /// <param name="document">
-        /// The document.
-        /// </param>
-        /// <param name="elementName">
-        /// Name of the element.
-        /// </param>
-        /// <returns>
-        /// The <see cref="XElement"/>.
-        /// </returns>
-        private static XElement GetElement(XDocument document, string elementName)
-        {
-            var defaultNamespace = document.Root.GetDefaultNamespace();
-
-            var element = document.Elements().SingleOrDefault(x => x.Name == defaultNamespace + elementName);
-
-            return element;
-        }
-
-        /// <summary>
-        /// Gets the or create element.
-        /// </summary>
-        /// <param name="parent">
-        /// The parent.
-        /// </param>
-        /// <param name="elementName">
-        /// Name of the element.
-        /// </param>
-        /// <returns>
-        /// The element.
-        /// </returns>
-        private static XElement GetOrCreateElement(XElement parent, string elementName)
-        {
-            var element = GetElement(parent, elementName);
-            var defaultNamespace = parent.Document.Root.GetDefaultNamespace();
-
-            if (element == null)
-            {
-                element = new XElement(defaultNamespace + elementName);
-
-                parent.Add(element);
-            }
-
-            return element;
         }
 
         /// <summary>
@@ -212,40 +143,6 @@
             var dependencies = GetOrCreateElement(metadata, "dependencies");
 
             return dependencies;
-        }
-
-        /// <summary>
-        /// Gets the spec metadata.
-        /// </summary>
-        /// <param name="nuSpecDocument">
-        /// The nu spec document.
-        /// </param>
-        /// <returns>
-        /// The <see cref="XElement"/>.
-        /// </returns>
-        /// <exception cref="System.Exception">
-        /// </exception>
-        private static XElement GetSpecMetadata(XDocument nuSpecDocument)
-        {
-            var package = GetElement(nuSpecDocument.Document, "package");
-
-            if (package == null)
-            {
-                throw new Exception(
-                    string.Format(
-                        "The NuSpec file does not contain a <package> XML element. The NuSpec file appears to be invalid."));
-            }
-
-            var metadata = GetElement(package, "metadata");
-
-            if (metadata == null)
-            {
-                throw new Exception(
-                    string.Format(
-                        "The NuSpec file does not contain a <metadata> XML element. The NuSpec file appears to be invalid."));
-            }
-
-            return metadata;
         }
 
         /// <summary>
@@ -323,22 +220,6 @@
         }
 
         /// <summary>
-        /// Opens the XML document.
-        /// </summary>
-        /// <param name="specFilePath">
-        /// The spec file path.
-        /// </param>
-        /// <returns>
-        /// The <see cref="XDocument"/>.
-        /// </returns>
-        private static XDocument OpenXmlDocument(string specFilePath)
-        {
-            var xml = File.ReadAllText(specFilePath);
-
-            return XDocument.Parse(xml);
-        }
-
-        /// <summary>
         /// Sets the element value.
         /// </summary>
         /// <param name="parent">
@@ -380,25 +261,6 @@
         }
 
         /// <summary>
-        /// Logs the message.
-        /// </summary>
-        /// <param name="message">
-        /// The message.
-        /// </param>
-        /// <param name="importance">
-        /// The importance.
-        /// </param>
-        private void LogMessage(string message, MessageImportance importance = MessageImportance.High)
-        {
-            BuildEngine.LogMessageEvent(
-                new BuildMessageEventArgs(
-                    "MergeNuSpecTask: " + message, 
-                    "MergeNuSpecTask", 
-                    "MergeNuSpecTask", 
-                    importance));
-        }
-
-        /// <summary>
         /// Merges the file.
         /// </summary>
         /// <param name="document">
@@ -428,7 +290,7 @@
                 new XElement(
                     defaultNamespace + "file", 
                     new XAttribute("src", srcValue), 
-                    new XAttribute("target", "lib" + frameworkFolder),
+                    new XAttribute("target", "lib" + frameworkFolder), 
                     new XAttribute("exclude", FileExclusionPattern)));
         }
 
@@ -560,13 +422,6 @@
             }
         }
 
-        /// <inheritdoc />
-        public IBuildEngine BuildEngine
-        {
-            get;
-            set;
-        }
-
         /// <summary>
         ///     Gets or sets the file exclusion pattern.
         /// </summary>
@@ -575,13 +430,6 @@
         /// </value>
         [Required]
         public string FileExclusionPattern
-        {
-            get;
-            set;
-        }
-
-        /// <inheritdoc />
-        public ITaskHost HostObject
         {
             get;
             set;

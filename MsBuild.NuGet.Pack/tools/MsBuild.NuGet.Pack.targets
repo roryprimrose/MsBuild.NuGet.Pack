@@ -1,12 +1,14 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="MsBuild.NuGet.Pack.MergeNuSpecTask" AssemblyFile="MsBuild.NuGet.Pack.dll" />
   <UsingTask TaskName="MsBuild.NuGet.Pack.BuildNuSpecTask" AssemblyFile="MsBuild.NuGet.Pack.dll" />
+  <UsingTask TaskName="MsBuild.NuGet.Pack.PublishPackageTask" AssemblyFile="MsBuild.NuGet.Pack.dll" />
 
   <!-- Hook into the AfterBuild activity -->
   <PropertyGroup>
     <BuildDependsOn>
       $(BuildDependsOn);
-      BuildPackage
+      BuildPackage;
+      PublishPackage
     </BuildDependsOn>
   </PropertyGroup>
   
@@ -27,6 +29,10 @@
     <ProjectDirectory Condition="'$(ProjectDirectory)' == ''">$(MSBuildProjectDirectory)</ProjectDirectory>
     <NuSpecPath>$(TargetDir)\$(NuSpecFileName)</NuSpecPath>
 
+    <RunNuGetPublish Condition="'$(RunNuGetPublish)'==''">false</RunNuGetPublish>
+    <NuGetServer Condition="'$(NuGetServer)' == ''"></NuGetServer>
+    <NuGetApiKey Condition="'$(NuGetApiKey)' == ''"></NuGetApiKey>
+    
   </PropertyGroup>
 
   <!-- 
@@ -58,4 +64,22 @@
       OutDir="$(NugetPackageTargetDir)" />
 
   </Target>
+
+  <Target Name="PublishPackage" Condition="$(RunNuGetPublish)">
+
+    <Error Condition="!Exists($(NuGetExePath))" Text="The NuGet commandline was not found at '$(NuGetExePath)'" />
+
+    <PropertyGroup>
+      <NugetPackageTargetDir Condition="'$(NugetPackageTargetDir)' == ''">$(TargetDir)</NugetPackageTargetDir>
+    </PropertyGroup>
+
+    <PublishPackageTask
+      NuGetPath="$(NuGetExePath)"
+      NuSpecPath="$(NuSpecPath)"
+      Server="$(NuGetServer)"
+      ApiKey="$(NuGetApiKey)"
+      OutDir="$(NugetPackageTargetDir)" />
+
+  </Target>
+  
 </Project>

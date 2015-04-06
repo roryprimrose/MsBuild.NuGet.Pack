@@ -43,7 +43,9 @@
   <ItemGroup>
     <Compile Include="BuildNuSpecTask.cs" />
     <Compile Include="MergeNuSpecTask.cs" />
+    <Compile Include="NuSpecTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PublishPackageTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="content\MsBuild.NuGet.Pack.DeleteMe.txt">

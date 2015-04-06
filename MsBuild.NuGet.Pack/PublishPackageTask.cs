@@ -1,31 +1,33 @@
 ﻿namespace MsBuild.NuGet.Pack
 {
-    using System;
     using System.Diagnostics;
     using System.IO;
     using Microsoft.Build.Framework;
 
     /// <summary>
-    ///     The <see cref="BuildNuSpecTask" />
-    ///     class executes a NuGet pack on a NuSpec file.
+    ///     The <see cref="PublishPackageTask" />
+    ///     class is used to publish a NuGet package to a NuGet server.
     /// </summary>
-    public class BuildNuSpecTask : ITask
+    public class PublishPackageTask : NuSpecTask
     {
         /// <inheritdoc />
-        public bool Execute()
+        public override bool Execute()
         {
+            var arguments = BuildArguments();
+
             var processInfo = new ProcessStartInfo(NuGetPath)
             {
-                Arguments = "pack \"" + NuSpecPath + "\"", 
+                Arguments = arguments, 
                 CreateNoWindow = true, 
                 RedirectStandardError = true, 
-                RedirectStandardOutput = true,
+                RedirectStandardOutput = true, 
                 UseShellExecute = false, 
-                WindowStyle = ProcessWindowStyle.Hidden,
+                WindowStyle = ProcessWindowStyle.Hidden, 
                 WorkingDirectory = OutDir
             };
 
-            LogMessage("Building NuGet package using " + "'" + processInfo.FileName + " " + processInfo.Arguments + "'");
+            LogMessage("Publishing NuGet package using " + "'" + processInfo.FileName + "'");
+            LogMessage("Publishing NuGet package using " + "'" + processInfo.FileName + " " + arguments + "'", MessageImportance.Low);
 
             var process = Process.Start(processInfo);
 
@@ -33,7 +35,7 @@
 
             if (completed == false)
             {
-                LogError("Timeout, creating the NuGet package took longer than 30 seconds.");
+                LogError("Timeout, publishing the NuGet package took longer than 30 seconds.");
             }
 
             using (var reader = process.StandardOutput)
@@ -59,6 +61,64 @@
         }
 
         /// <summary>
+        ///     The build arguments.
+        /// </summary>
+        /// <returns>
+        ///     The <see cref="string" />.
+        /// </returns>
+        private string BuildArguments()
+        {
+            var arguments = "push ";
+            var packagePath = DeterminePackagePath();
+
+            LogMessage("Publishing package '" + packagePath + "'");
+
+            arguments += "\"" + packagePath + "\" ";
+
+            if (string.IsNullOrWhiteSpace(ApiKey) == false)
+            {
+                arguments += "-ApiKey \"" + ApiKey + "\" ";
+            }
+
+            if (string.IsNullOrWhiteSpace(Server) == false)
+            {
+                arguments += "-Source \"" + Server + "\" ";
+            }
+
+            arguments += "-NonInteractive ";
+
+            return arguments;
+        }
+
+        /// <summary>
+        ///     Determines the package path.
+        /// </summary>
+        /// <returns>The path of the NuGet package..</returns>
+        private string DeterminePackagePath()
+        {
+            var specName = Path.GetFileNameWithoutExtension(NuSpecPath);
+            var version = GetSpecVersion();
+            var packageName = specName + "." + version + ".nupkg";
+            var packagePath = Path.Combine(OutDir, packageName);
+
+            return packagePath;
+        }
+
+        /// <summary>
+        ///     Gets the NuSpec version.
+        /// </summary>
+        /// <returns>The package version.</returns>
+        private string GetSpecVersion()
+        {
+            // Open the nuspec file and extract the version
+            var spec = OpenXmlDocument(NuSpecPath);
+            var metadata = GetSpecMetadata(spec);
+            var versionElement = GetElement(metadata, "version");
+
+            return versionElement.Value;
+        }
+
+        /// <summary>
         /// The log message.
         /// </summary>
         /// <param name="message">
@@ -72,12 +132,12 @@
             }
 
             var nuspecName = Path.GetFileName(NuSpecPath);
-            var path = Path.Combine(ProjectDirectory, nuspecName);
+            var path = Path.Combine(OutDir, nuspecName);
 
             BuildEngine.LogErrorEvent(
                 new BuildErrorEventArgs(
                     "BuildNuSpecTask", 
-                    "Failure",
+                    "Failure", 
                     path, 
                     0, 
                     0, 
@@ -89,33 +149,10 @@
         }
 
         /// <summary>
-        /// Logs the message.
+        ///     Gets or sets the API key.
         /// </summary>
-        /// <param name="message">
-        /// The message.
-        /// </param>
-        /// <param name="importance">
-        /// The importance.
-        /// </param>
-        private void LogMessage(string message, MessageImportance importance = MessageImportance.Normal)
-        {
-            BuildEngine.LogMessageEvent(
-                new BuildMessageEventArgs(
-                    "BuildNuSpecTask: " + message, 
-                    "BuildNuSpecTask", 
-                    "BuildNuSpecTask", 
-                    importance));
-        }
-
-        /// <inheritdoc />
-        public IBuildEngine BuildEngine
-        {
-            get;
-            set;
-        }
-
-        /// <inheritdoc />
-        public ITaskHost HostObject
+        /// <value>The API key.</value>
+        public string ApiKey
         {
             get;
             set;
@@ -158,10 +195,11 @@
         }
 
         /// <summary>
-        ///     The projects root directory; set to <code>$(MSBuildProjectDirectory)</code> by default.
+        ///     Gets or sets the server.
         /// </summary>
+        /// <value>The server.</value>
         [Required]
-        public string ProjectDirectory
+        public string Server
         {
             get;
             set;
