@@ -145,11 +145,13 @@
         /// </param>
         protected void LogMessage(string message, MessageImportance importance = MessageImportance.Normal)
         {
+            var taskName = GetType().Name;
+
             BuildEngine.LogMessageEvent(
                 new BuildMessageEventArgs(
-                    "MergeNuSpecTask: " + message, 
-                    "MergeNuSpecTask", 
-                    "MergeNuSpecTask", 
+                    taskName + ": " + message,
+                    taskName,
+                    taskName, 
                     importance));
         }
 
