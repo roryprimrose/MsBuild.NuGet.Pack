@@ -9,7 +9,7 @@ This NuGet package provides MsBuild support for Visual Studio projects. It uses 
 
 **UseBuildVersionAsPatch** (True/False) - defaults to False. Toggles whether the build number of the assembly is pushed into the third version number (Patch) in the package version.
 
-**FileExclusionPattern** - defaults to *.CodeAnalysisLog.xml;*.lastcodeanalysissucceeded;*Test*.*. Controls which file paths are excluded from the automatic bundling of files into the package.
+**FileExclusionPattern** - defaults to _\*.CodeAnalysisLog.xml;\*.lastcodeanalysissucceeded;\*Test\*.\*_. Controls which file paths are excluded from the automatic bundling of files into the package.
 
 
 ## Publish Package Properties
