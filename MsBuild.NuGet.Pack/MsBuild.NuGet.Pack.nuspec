@@ -3,7 +3,7 @@
   <metadata>
     <id>MsBuild.NuGet.Pack</id>
     <title>MsBuild NuGet Packager</title>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <authors>Rory Primrose</authors>
     <owners>Rory Primrose</owners>
     <summary>Includes MSBuild support for generating NuGet packages for a project.</summary>
@@ -12,7 +12,7 @@
     <description>
       This package contains the msbuild support for packaging a NuGet package for a project.
     </description>
-    <releaseNotes>Added NuGet publish support.</releaseNotes>
+    <releaseNotes>Updated to NuGet 2.8.5.</releaseNotes>
     <tags>msbuild nuget</tags>
     <developmentDependency>true</developmentDependency>
   </metadata>
