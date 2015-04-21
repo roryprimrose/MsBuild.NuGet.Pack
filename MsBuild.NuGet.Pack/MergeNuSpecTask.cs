@@ -3,8 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.DirectoryServices.AccountManagement;
     using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Xml.Linq;
     using Microsoft.Build.Framework;
@@ -45,14 +49,52 @@
             return true;
         }
 
+    [DllImport("secur32.dll", CharSet = CharSet.Auto)]
+    private static extern int GetUserNameEx(int nameFormat, StringBuilder userNameBuffer, ref uint userNameBufferSize);
+
+        static string GetFullUserName()
+        {
+            var usernameBuffer = new StringBuilder(1024);
+            var bufferSize = (uint)usernameBuffer.Capacity;
+
+            // try to resolve the username locally
+            if (GetUserNameEx(3 /*NameDisplay*/, usernameBuffer, ref bufferSize) != 0)
+            {
+                var fullUserName = usernameBuffer.ToString();
+                if (string.IsNullOrWhiteSpace(fullUserName))
+                  return null;
+                // swap lastname, firstname
+                return Regex.Replace(fullUserName, @"\s*(\S+)\s*,\s*(\S+)\s*", "$2 $1");
+            }
+
+            try
+            {
+                return UserPrincipal.Current.DisplayName;
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
+            catch (PrincipalException)
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         ///     Gets the current user.
         /// </summary>
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        private static string GetCurrentUser()
+        private string GetCurrentUser()
         {
+            if (!DontUseWindowsDisplayName)
+            {
+                var fullName = GetFullUserName();
+                if (!string.IsNullOrWhiteSpace(fullName))
+                    return fullName; 
+            }
             var fallbackUserName = Environment.UserName;
 
             if (Thread.CurrentPrincipal == null)
@@ -530,6 +572,19 @@
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the task should not use <see cref="UserPrincipal.DisplayName"/> to get the full user name. (e.g. in situations with network problems)
+        /// </summary>
+        /// <value>
+        /// <c>false</c> Use <see cref="UserPrincipal.DisplayName"/> to get the full name, <c>true</c> not use <see cref="UserPrincipal.DisplayName"/>, uses the <see cref="System.Security.Principal.IPrincipal.Identity"/> of <see cref="Thread.CurrentPrincipal"/> or <see cref="Environment.UserName"/>
+        /// </value>
+        [Required]
+        public bool DontUseWindowsDisplayName
+        {
+          get;
+          set;
         }
     }
 }

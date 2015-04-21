@@ -28,6 +28,7 @@
     <ProjectFile Condition="'$(ProjectFile)' == ''">$(MSBuildProjectFile)</ProjectFile>
     <ProjectDirectory Condition="'$(ProjectDirectory)' == ''">$(MSBuildProjectDirectory)</ProjectDirectory>
     <NuSpecPath>$(TargetDir)\$(NuSpecFileName)</NuSpecPath>
+    <DontUseWindowsDisplayName Condition="'$(DontUseWindowsDisplayName)' == ''">false</DontUseWindowsDisplayName>
 
     <RunNuGetPublish Condition="'$(RunNuGetPublish)'==''">false</RunNuGetPublish>
     <NuGetServer Condition="'$(NuGetServer)' == ''"></NuGetServer>
@@ -52,6 +53,7 @@
       ProjectFile="$(ProjectFile)"
       PrimaryOutputAssembly="$(TargetPath)"
       IncludeBuildVersion="$(IncludeBuildVersion)"
+      DontUseWindowsDisplayName="$(DontUseWindowsDisplayName)"
       UseBuildVersionAsPatch="$(UseBuildVersionAsPatch)"
       FileExclusionPattern="$(FileExclusionPattern)"
       TargetFrameworkVersion="$(TargetFrameworkVersion)"
