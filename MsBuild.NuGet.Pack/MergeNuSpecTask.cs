@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Xml.Linq;
     using Microsoft.Build.Framework;
@@ -313,19 +314,43 @@
             SetElementValue(metadata, "title", info.ProductName);
 
             string version;
+            bool isValidProductVersion = IsValidVersion(info.ProductVersion);
 
             if (IncludeBuildVersion)
             {
-                version = info.ProductVersion;
+                if (isValidProductVersion)
+                {
+                    version = info.ProductVersion;
+                }
+                else
+                {
+                    version = info.FileVersion;
+                }
             }
             else if (UseBuildVersionAsPatch)
             {
-                version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
+                if (isValidProductVersion)
+                {
+                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
+                }
+                else
+                {
+                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
+                }
             }
             else
             {
-                version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
+                if (isValidProductVersion)
+                {
+                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
+                }
+                else
+                {
+                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FileBuildPart;
+                }
             }
+
+            LogMessage("Using version {0} from {1}", MessageImportance.Low, version, assemblyPath);
 
             SetElementValue(metadata, "version", version);
             SetElementValueIfEmpty(metadata, "summary", info.Comments);
@@ -335,6 +360,11 @@
 
             SetElementValueIfEmpty(metadata, "authors", currentUser);
             SetElementValueIfEmpty(metadata, "owners", currentUser);
+        }
+
+        private static bool IsValidVersion(string version)
+        {
+            return Regex.IsMatch(version, @"^\d+(\.\d+){0,3}$");
         }
 
         /// <summary>

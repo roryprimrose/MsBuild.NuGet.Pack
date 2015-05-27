@@ -1,6 +1,7 @@
 ﻿namespace MsBuild.NuGet.Pack
 {
     using System;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Xml.Linq;
@@ -15,17 +16,31 @@
         /// <inheritdoc />
         public abstract bool Execute();
 
+        /// <inheritdoc />
+        public IBuildEngine BuildEngine
+        {
+            get;
+            set;
+        }
+
+        /// <inheritdoc />
+        public ITaskHost HostObject
+        {
+            get;
+            set;
+        }
+
         /// <summary>
-        /// Gets the element.
+        ///     Gets the element.
         /// </summary>
         /// <param name="parent">
-        /// The parent.
+        ///     The parent.
         /// </param>
         /// <param name="elementName">
-        /// Name of the element.
+        ///     Name of the element.
         /// </param>
         /// <returns>
-        /// The <see cref="XElement"/>.
+        ///     The <see cref="XElement" />.
         /// </returns>
         protected static XElement GetElement(XElement parent, string elementName)
         {
@@ -37,16 +52,16 @@
         }
 
         /// <summary>
-        /// Gets the element.
+        ///     Gets the element.
         /// </summary>
         /// <param name="document">
-        /// The document.
+        ///     The document.
         /// </param>
         /// <param name="elementName">
-        /// Name of the element.
+        ///     Name of the element.
         /// </param>
         /// <returns>
-        /// The <see cref="XElement"/>.
+        ///     The <see cref="XElement" />.
         /// </returns>
         protected static XElement GetElement(XDocument document, string elementName)
         {
@@ -58,16 +73,16 @@
         }
 
         /// <summary>
-        /// Gets the or create element.
+        ///     Gets the or create element.
         /// </summary>
         /// <param name="parent">
-        /// The parent.
+        ///     The parent.
         /// </param>
         /// <param name="elementName">
-        /// Name of the element.
+        ///     Name of the element.
         /// </param>
         /// <returns>
-        /// The element.
+        ///     The element.
         /// </returns>
         protected static XElement GetOrCreateElement(XElement parent, string elementName)
         {
@@ -85,13 +100,13 @@
         }
 
         /// <summary>
-        /// Gets the spec metadata.
+        ///     Gets the spec metadata.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <returns>
-        /// The <see cref="XElement"/>.
+        ///     The <see cref="XElement" />.
         /// </returns>
         /// <exception cref="System.Exception">
         /// </exception>
@@ -119,54 +134,47 @@
         }
 
         /// <summary>
-        /// Opens the XML document.
+        ///     Logs the message.
+        /// </summary>
+        /// <param name="message">
+        ///     The message.
+        /// </param>
+        /// <param name="importance">
+        ///     The importance.
+        /// </param>
+        /// <param name="args">The message format arguments.</param>
+        protected void LogMessage(
+            string message,
+            MessageImportance importance = MessageImportance.Normal,
+            params object[] args)
+        {
+            var messageToWrite = message;
+
+            if (args != null)
+            {
+                messageToWrite = string.Format(CultureInfo.CurrentCulture, message, args);
+            }
+
+            var taskName = GetType().Name;
+
+            BuildEngine.LogMessageEvent(
+                new BuildMessageEventArgs(taskName + ": " + messageToWrite, taskName, taskName, importance));
+        }
+
+        /// <summary>
+        ///     Opens the XML document.
         /// </summary>
         /// <param name="specFilePath">
-        /// The spec file path.
+        ///     The spec file path.
         /// </param>
         /// <returns>
-        /// The <see cref="XDocument"/>.
+        ///     The <see cref="XDocument" />.
         /// </returns>
         protected static XDocument OpenXmlDocument(string specFilePath)
         {
             var xml = File.ReadAllText(specFilePath);
 
             return XDocument.Parse(xml);
-        }
-
-        /// <summary>
-        /// Logs the message.
-        /// </summary>
-        /// <param name="message">
-        /// The message.
-        /// </param>
-        /// <param name="importance">
-        /// The importance.
-        /// </param>
-        protected void LogMessage(string message, MessageImportance importance = MessageImportance.Normal)
-        {
-            var taskName = GetType().Name;
-
-            BuildEngine.LogMessageEvent(
-                new BuildMessageEventArgs(
-                    taskName + ": " + message,
-                    taskName,
-                    taskName, 
-                    importance));
-        }
-
-        /// <inheritdoc />
-        public IBuildEngine BuildEngine
-        {
-            get;
-            set;
-        }
-
-        /// <inheritdoc />
-        public ITaskHost HostObject
-        {
-            get;
-            set;
         }
     }
 }
