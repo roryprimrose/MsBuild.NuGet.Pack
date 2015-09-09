@@ -17,7 +17,8 @@
   -->
   <PropertyGroup>
     <MsBuildNuGetPackImported>true</MsBuildNuGetPackImported>
-
+    <OverrideNuGetVersion Condition="'$(OverrideNuGetVersion)'==''">false</OverrideNuGetVersion>
+    <NuGetVersion Condition="'$(NuGetVersion)'==''"></NuGetVersion>
     <RunNuGetPack Condition="'$(RunNuGetPack)'==''">false</RunNuGetPack>
     <IncludeBuildVersion Condition="'$(IncludeBuildVersion)'==''">false</IncludeBuildVersion>
     <UseBuildVersionAsPatch Condition="'$(UseBuildVersionAsPatch)'==''">false</UseBuildVersionAsPatch>
@@ -55,7 +56,10 @@
       UseBuildVersionAsPatch="$(UseBuildVersionAsPatch)"
       FileExclusionPattern="$(FileExclusionPattern)"
       TargetFrameworkVersion="$(TargetFrameworkVersion)"
-      TargetFrameworkProfile="$(TargetFrameworkProfile)" />
+      TargetFrameworkProfile="$(TargetFrameworkProfile)" 
+      OverrideNuGetVersion="$(OverrideNuGetVersion)"
+      NuGetVersion="$(NuGetVersion)"
+      />
 
     <BuildNuSpecTask
       NuGetPath="$(NuGetExePath)"

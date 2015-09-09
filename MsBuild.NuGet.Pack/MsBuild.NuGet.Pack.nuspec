@@ -1,18 +1,19 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>MsBuild.NuGet.Pack</id>
+    <id>MsBuild.NuGet.Pack.GitVerFork</id>
     <title>MsBuild NuGet Packager</title>
-    <version>1.6.1</version>
-    <authors>Rory Primrose</authors>
+    <version>1.7.0</version>
+    <authors>Brett Gerhardi</authors>
     <owners>Rory Primrose</owners>
     <summary>Includes MSBuild support for generating NuGet packages for a project.</summary>
     <projectUrl>https://github.com/roryprimrose/MsBuild.NuGet.Pack</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
       This package contains the msbuild support for packaging a NuGet package for a project.
+      Extended from the original on Nuget.com to allow overriding the version number
     </description>
-    <releaseNotes>Updated to NuGet 2.8.5.</releaseNotes>
+    <releaseNotes>Added PackageVersion property to allow overriding from MSBuild. Changed version pattern match to conform to semver 1.0</releaseNotes>
     <tags>msbuild nuget</tags>
     <developmentDependency>true</developmentDependency>
   </metadata>

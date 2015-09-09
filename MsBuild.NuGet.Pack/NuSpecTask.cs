@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Xml.Linq;
     using Microsoft.Build.Framework;
+    using Microsoft.Build.Utilities;
 
     /// <summary>
     ///     The <see cref="NuSpecTask" />
@@ -13,6 +14,12 @@
     /// </summary>
     public abstract class NuSpecTask : ITask
     {
+        /// <inheritdoc/>
+        public NuSpecTask()
+        {
+            _log = new TaskLoggingHelper(this);
+        }
+
         /// <inheritdoc />
         public abstract bool Execute();
 
@@ -175,6 +182,30 @@
             var xml = File.ReadAllText(specFilePath);
 
             return XDocument.Parse(xml);
+        }
+
+
+        ///
+        /// Summary:
+        ///     Holds an instance of a Microsoft.Build.Utilities.TaskLoggingHelper class containing
+        ///     task logging methods.
+        ///
+        /// Returns:
+        ///     The logging helper object.
+        private TaskLoggingHelper _log;
+
+        /// Summary:
+        ///     Gets an instance of a Microsoft.Build.Utilities.TaskLoggingHelper class containing
+        ///     task logging methods.
+        ///
+        /// Returns:
+        ///     The logging helper object.
+        public TaskLoggingHelper Log
+        {
+            get
+            {
+                return _log;
+            }
         }
     }
 }

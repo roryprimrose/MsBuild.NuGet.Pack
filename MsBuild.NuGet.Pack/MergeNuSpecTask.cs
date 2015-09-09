@@ -9,6 +9,7 @@
     using System.Threading;
     using System.Xml.Linq;
     using Microsoft.Build.Framework;
+    using Microsoft.Build.Utilities;
 
     /// <summary>
     ///     The merge nu spec task.
@@ -24,26 +25,36 @@
         /// <inheritdoc />
         public override bool Execute()
         {
-            var packageConfig = Path.Combine(ProjectDirectory, "packages.config");
-
-            var nuSpecDocument = OpenXmlDocument(NuSpecPath);
-
-            MergeMetadata(nuSpecDocument, PrimaryOutputAssembly);
-
-            if (File.Exists(packageConfig))
+            try
             {
-                MergePackageDependencies(nuSpecDocument, packageConfig);
+                var packageConfig = Path.Combine(ProjectDirectory, "packages.config");
+
+                var nuSpecDocument = OpenXmlDocument(NuSpecPath);
+
+                MergeMetadata(nuSpecDocument, PrimaryOutputAssembly);
+
+                if (File.Exists(packageConfig))
+                {
+                    MergePackageDependencies(nuSpecDocument, packageConfig);
+                }
+
+                var projectPath = Path.Combine(ProjectDirectory, ProjectFile);
+
+                MergeReferences(nuSpecDocument, projectPath);
+
+                MergeFile(nuSpecDocument, PrimaryOutputAssembly);
+
+                nuSpecDocument.Save(NuSpecPath);
+                //return true;
             }
+            catch (Exception e)
+            {
+                Log.LogError(e.Message);
+                //LogMessage(e.Message, MessageImportance.High);
+                //return false;
+            }
+            return !Log.HasLoggedErrors;
 
-            var projectPath = Path.Combine(ProjectDirectory, ProjectFile);
-
-            MergeReferences(nuSpecDocument, projectPath);
-
-            MergeFile(nuSpecDocument, PrimaryOutputAssembly);
-
-            nuSpecDocument.Save(NuSpecPath);
-
-            return true;
         }
 
         /// <summary>
@@ -289,9 +300,9 @@
 
             files.Add(
                 new XElement(
-                    defaultNamespace + "file", 
-                    new XAttribute("src", srcValue), 
-                    new XAttribute("target", "lib" + frameworkFolder), 
+                    defaultNamespace + "file",
+                    new XAttribute("src", srcValue),
+                    new XAttribute("target", "lib" + frameworkFolder),
                     new XAttribute("exclude", FileExclusionPattern)));
         }
 
@@ -316,7 +327,16 @@
             string version;
             bool isValidProductVersion = IsValidVersion(info.ProductVersion);
 
-            if (IncludeBuildVersion)
+            if (OverrideNuGetVersion && !IsValidVersion(NuGetVersion))
+            {
+                throw new InvalidOperationException(string.Format("OverrideNuGetVersion set to true but NuGetVersion invalid. NuGetVersion was: {0}", NuGetVersion));
+            }
+ 
+            if (OverrideNuGetVersion)
+            {
+                version = NuGetVersion;
+            }
+            else if (IncludeBuildVersion)
             {
                 if (isValidProductVersion)
                 {
@@ -364,7 +384,7 @@
 
         private static bool IsValidVersion(string version)
         {
-            return Regex.IsMatch(version, @"^\d+(\.\d+){0,3}$");
+            return Regex.IsMatch(version, @"^\d+.\d+.\d+(-([a-zA-Z0-9-]+))?$"); //semver v1.0 http://semver.org/spec/v1.0.0.html
         }
 
         /// <summary>
@@ -399,8 +419,8 @@
                     // We need to add the package dependency into the nuspec file
                     specDependencies.Add(
                         new XElement(
-                            defaultNamespace + "dependency", 
-                            new XAttribute("id", id), 
+                            defaultNamespace + "dependency",
+                            new XAttribute("id", id),
                             new XAttribute("version", version)));
                 }
                 else
@@ -561,5 +581,15 @@
             get;
             set;
         }
+        /// <summary>
+        /// Gets or sets a value that will be the Nuget package version. Must be set by the time Merge is called if OverrideNuGetVersion is set
+        /// </summary>
+        public string NuGetVersion { get; set; }
+        /// <summary>
+        /// Indicates if we intend to set NuGetVersion. If not used set will continue to try to get the version from the assembly.
+        /// Useful if you want the package to be a different version from the assembly (e.g. if using GitVersion etc)
+        /// </summary>
+        public bool OverrideNuGetVersion { get; set; }
+
     }
 }
