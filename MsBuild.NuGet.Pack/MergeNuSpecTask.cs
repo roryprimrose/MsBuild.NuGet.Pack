@@ -46,6 +46,67 @@
             return true;
         }
 
+        private string DeterminePackageVersion(string assemblyPath, FileVersionInfo info)
+        {
+            var version = PackageVersion;
+
+            if (string.IsNullOrEmpty(version))
+            {
+                LogMessage("Using version {0} from the PackageVersion property", MessageImportance.Low, version);
+
+                return version;
+            }
+
+            var isValidProductVersion = IsValidVersion(info.ProductVersion);
+
+            if (isValidProductVersion)
+            {
+                if (IncludeBuildVersion)
+                {
+                    version = info.ProductVersion;
+                }
+                else if (UseBuildVersionAsPatch)
+                {
+                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
+                }
+                else
+                {
+                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
+                }
+
+                LogMessage(
+                    "Using version {0} from {1} product version {2}",
+                    MessageImportance.Low,
+                    version,
+                    assemblyPath,
+                    info.ProductVersion);
+            }
+            else
+            {
+                if (IncludeBuildVersion)
+                {
+                    version = info.FileVersion;
+                }
+                else if (UseBuildVersionAsPatch)
+                {
+                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
+                }
+                else
+                {
+                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FileBuildPart;
+                }
+
+                LogMessage(
+                    "Using version {0} from {1} file version {2}",
+                    MessageImportance.Low,
+                    version,
+                    assemblyPath,
+                    info.FileVersion);
+            }
+
+            return version;
+        }
+
         /// <summary>
         ///     Gets the current user.
         /// </summary>
@@ -77,13 +138,13 @@
         }
 
         /// <summary>
-        /// Gets the project packages.
+        ///     Gets the project packages.
         /// </summary>
         /// <param name="packageConfig">
-        /// The package configuration.
+        ///     The package configuration.
         /// </param>
         /// <returns>
-        /// The <see cref="IEnumerable{T}"/>.
+        ///     The <see cref="IEnumerable{T}" />.
         /// </returns>
         private static IEnumerable<XElement> GetProjectPackages(string packageConfig)
         {
@@ -103,13 +164,13 @@
         }
 
         /// <summary>
-        /// Gets the project references.
+        ///     Gets the project references.
         /// </summary>
         /// <param name="projectPath">
-        /// The project path.
+        ///     The project path.
         /// </param>
         /// <returns>
-        /// The <see cref="IEnumerable{T}"/>.
+        ///     The <see cref="IEnumerable{T}" />.
         /// </returns>
         private static IEnumerable<XElement> GetProjectReferences(string projectPath)
         {
@@ -129,13 +190,13 @@
         }
 
         /// <summary>
-        /// Gets the spec dependencies.
+        ///     Gets the spec dependencies.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <returns>
-        /// The <see cref="XElement"/>.
+        ///     The <see cref="XElement" />.
         /// </returns>
         private static XElement GetSpecDependencies(XDocument nuSpecDocument)
         {
@@ -147,13 +208,13 @@
         }
 
         /// <summary>
-        /// Gets the spec references.
+        ///     Gets the spec references.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <returns>
-        /// The <see cref="XElement"/>.
+        ///     The <see cref="XElement" />.
         /// </returns>
         private static XElement GetSpecReferences(XDocument nuSpecDocument)
         {
@@ -165,15 +226,15 @@
         }
 
         /// <summary>
-        /// Gets the target framework.
+        ///     Gets the target framework.
         /// </summary>
         /// <param name="targetFrameworkVersion">
-        /// The target framework version.
+        ///     The target framework version.
         /// </param>
         /// <param name="targetFrameworkProfile">
         /// </param>
         /// <returns>
-        /// The nuget framework target.
+        ///     The nuget framework target.
         /// </returns>
         private static string GetTargetFramework(string targetFrameworkVersion, string targetFrameworkProfile)
         {
@@ -220,55 +281,19 @@
             return string.Empty;
         }
 
-        /// <summary>
-        /// Sets the element value.
-        /// </summary>
-        /// <param name="parent">
-        /// The parent.
-        /// </param>
-        /// <param name="elementName">
-        /// Name of the element.
-        /// </param>
-        /// <param name="value">
-        /// The value.
-        /// </param>
-        private static void SetElementValue(XElement parent, string elementName, string value)
+        private static bool IsValidVersion(string version)
         {
-            var element = GetOrCreateElement(parent, elementName);
-
-            element.Value = value;
+            return Regex.IsMatch(version, @"^\d+.\d+.\d+(-[a-zA-Z0-9-]+)?$");
         }
 
         /// <summary>
-        /// Sets the element value if empty.
-        /// </summary>
-        /// <param name="parent">
-        /// The parent.
-        /// </param>
-        /// <param name="elementName">
-        /// Name of the element.
-        /// </param>
-        /// <param name="value">
-        /// The value.
-        /// </param>
-        private static void SetElementValueIfEmpty(XElement parent, string elementName, string value)
-        {
-            var element = GetOrCreateElement(parent, elementName);
-
-            if (string.IsNullOrWhiteSpace(element.Value))
-            {
-                element.Value = value;
-            }
-        }
-
-        /// <summary>
-        /// Merges the file.
+        ///     Merges the file.
         /// </summary>
         /// <param name="document">
-        /// The document.
+        ///     The document.
         /// </param>
         /// <param name="primaryOutputAssembly">
-        /// The primary output assembly.
+        ///     The primary output assembly.
         /// </param>
         private void MergeFile(XDocument document, string primaryOutputAssembly)
         {
@@ -289,20 +314,20 @@
 
             files.Add(
                 new XElement(
-                    defaultNamespace + "file", 
-                    new XAttribute("src", srcValue), 
-                    new XAttribute("target", "lib" + frameworkFolder), 
+                    defaultNamespace + "file",
+                    new XAttribute("src", srcValue),
+                    new XAttribute("target", "lib" + frameworkFolder),
                     new XAttribute("exclude", FileExclusionPattern)));
         }
 
         /// <summary>
-        /// Merges the version.
+        ///     Merges the version.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <param name="assemblyPath">
-        /// The assembly path.
+        ///     The assembly path.
         /// </param>
         private void MergeMetadata(XDocument nuSpecDocument, string assemblyPath)
         {
@@ -313,44 +338,7 @@
 
             SetElementValue(metadata, "title", info.ProductName);
 
-            string version;
-            bool isValidProductVersion = IsValidVersion(info.ProductVersion);
-
-            if (IncludeBuildVersion)
-            {
-                if (isValidProductVersion)
-                {
-                    version = info.ProductVersion;
-                }
-                else
-                {
-                    version = info.FileVersion;
-                }
-            }
-            else if (UseBuildVersionAsPatch)
-            {
-                if (isValidProductVersion)
-                {
-                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
-                }
-                else
-                {
-                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
-                }
-            }
-            else
-            {
-                if (isValidProductVersion)
-                {
-                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
-                }
-                else
-                {
-                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FileBuildPart;
-                }
-            }
-
-            LogMessage("Using version {0} from {1}", MessageImportance.Low, version, assemblyPath);
+            var version = DeterminePackageVersion(assemblyPath, info);
 
             SetElementValue(metadata, "version", version);
             SetElementValueIfEmpty(metadata, "summary", info.Comments);
@@ -362,19 +350,14 @@
             SetElementValueIfEmpty(metadata, "owners", currentUser);
         }
 
-        private static bool IsValidVersion(string version)
-        {
-            return Regex.IsMatch(version, @"^\d+(\.\d+){0,3}$");
-        }
-
         /// <summary>
-        /// Merges the package dependencies.
+        ///     Merges the package dependencies.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <param name="packageConfig">
-        /// The package configuration.
+        ///     The package configuration.
         /// </param>
         private void MergePackageDependencies(XDocument nuSpecDocument, string packageConfig)
         {
@@ -399,8 +382,8 @@
                     // We need to add the package dependency into the nuspec file
                     specDependencies.Add(
                         new XElement(
-                            defaultNamespace + "dependency", 
-                            new XAttribute("id", id), 
+                            defaultNamespace + "dependency",
+                            new XAttribute("id", id),
                             new XAttribute("version", version)));
                 }
                 else
@@ -412,13 +395,13 @@
         }
 
         /// <summary>
-        /// Merges the references.
+        ///     Merges the references.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <param name="projectPath">
-        /// The project path.
+        ///     The project path.
         /// </param>
         private void MergeReferences(XDocument nuSpecDocument, string projectPath)
         {
@@ -449,6 +432,47 @@
                     // We need to update the assembly reference in the spec
                     specAssembly.SetAttributeValue("assemblyName", include);
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Sets the element value.
+        /// </summary>
+        /// <param name="parent">
+        ///     The parent.
+        /// </param>
+        /// <param name="elementName">
+        ///     Name of the element.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        private static void SetElementValue(XElement parent, string elementName, string value)
+        {
+            var element = GetOrCreateElement(parent, elementName);
+
+            element.Value = value;
+        }
+
+        /// <summary>
+        ///     Sets the element value if empty.
+        /// </summary>
+        /// <param name="parent">
+        ///     The parent.
+        /// </param>
+        /// <param name="elementName">
+        ///     Name of the element.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        private static void SetElementValueIfEmpty(XElement parent, string elementName, string value)
+        {
+            var element = GetOrCreateElement(parent, elementName);
+
+            if (string.IsNullOrWhiteSpace(element.Value))
+            {
+                element.Value = value;
             }
         }
 
@@ -486,6 +510,19 @@
         /// </value>
         [Required]
         public string NuSpecPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets the package version.
+        /// </summary>
+        /// <value>
+        ///     The package version.
+        /// </value>
+        [Required]
+        public string PackageVersion
         {
             get;
             set;
