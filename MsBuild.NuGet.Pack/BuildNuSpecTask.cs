@@ -9,32 +9,32 @@
     ///     The <see cref="BuildNuSpecTask" />
     ///     class executes a NuGet pack on a NuSpec file.
     /// </summary>
-    public class BuildNuSpecTask : ITask
+    public class BuildNuSpecTask : NuSpecTask
     {
         /// <inheritdoc />
-        public bool Execute()
+        public override bool Execute()
         {
             var processInfo = new ProcessStartInfo(NuGetPath)
             {
-                Arguments = "pack \"" + NuSpecPath + "\"", 
-                CreateNoWindow = true, 
+                Arguments = "pack \"" + NuSpecPath + "\" -NoPackageAnalysis -NonInteractive", 
+                //CreateNoWindow = false,
+                CreateNoWindow = true,
                 RedirectStandardError = true, 
                 RedirectStandardOutput = true,
-                UseShellExecute = false, 
+                UseShellExecute = false,
                 WindowStyle = ProcessWindowStyle.Hidden,
+                //WindowStyle = ProcessWindowStyle.Normal,
                 WorkingDirectory = OutDir
             };
 
+            //Log.LogMessageFromText("Building NuGet package using " + "'" + processInfo.FileName + " " + processInfo.Arguments + "'", MessageImportance.Normal);
             LogMessage("Building NuGet package using " + "'" + processInfo.FileName + " " + processInfo.Arguments + "'");
 
             var process = Process.Start(processInfo);
 
             var completed = process.WaitForExit(30000);
-
-            if (completed == false)
-            {
-                LogError("Timeout, creating the NuGet package took longer than 30 seconds.");
-            }
+            if (completed)
+                process.WaitForExit(); // allow any async calls to complete before releasing
 
             using (var reader = process.StandardOutput)
             {
@@ -43,6 +43,11 @@
                 LogMessage(output);
             }
 
+            if (completed == false)
+            {
+                LogError("Timeout, creating the NuGet package took longer than 30 seconds.");
+            }
+            
             using (var errorReader = process.StandardError)
             {
                 var error = errorReader.ReadToEnd();
@@ -54,6 +59,7 @@
                     return false;
                 }
             }
+            process.Close();
 
             return true;
         }
@@ -97,15 +103,15 @@
         /// <param name="importance">
         /// The importance.
         /// </param>
-        private void LogMessage(string message, MessageImportance importance = MessageImportance.Normal)
-        {
-            BuildEngine.LogMessageEvent(
-                new BuildMessageEventArgs(
-                    "BuildNuSpecTask: " + message, 
-                    "BuildNuSpecTask", 
-                    "BuildNuSpecTask", 
-                    importance));
-        }
+        //private void LogMessage(string message, MessageImportance importance = MessageImportance.Normal)
+        //{
+        //    BuildEngine.LogMessageEvent(
+        //        new BuildMessageEventArgs(
+        //            "BuildNuSpecTask: " + message, 
+        //            "BuildNuSpecTask", 
+        //            "BuildNuSpecTask", 
+        //            importance));
+        //}
 
         /// <inheritdoc />
         public IBuildEngine BuildEngine

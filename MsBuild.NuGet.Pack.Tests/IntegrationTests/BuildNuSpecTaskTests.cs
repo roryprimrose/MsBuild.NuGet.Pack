@@ -75,7 +75,7 @@
             {
                 target.Execute();
 
-                Assert.Fail("Exception was expected.");
+                Assert.Fail("InvalidOperationException was expected.");
             }
             catch (InvalidOperationException ex)
             {

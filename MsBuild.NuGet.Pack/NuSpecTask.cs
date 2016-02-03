@@ -1,6 +1,7 @@
 ﻿namespace MsBuild.NuGet.Pack
 {
     using System;
+    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -163,9 +164,11 @@
             }
 
             var taskName = GetType().Name;
-
-            BuildEngine.LogMessageEvent(
-                new BuildMessageEventArgs(taskName + ": " + messageToWrite, taskName, taskName, importance));
+            if (BuildEngine == null)
+                Debug.WriteLine(taskName + ": " + messageToWrite);
+            else
+                BuildEngine.LogMessageEvent(
+                    new BuildMessageEventArgs(taskName + ": " + messageToWrite, taskName, taskName, importance));
         }
 
         /// <summary>
