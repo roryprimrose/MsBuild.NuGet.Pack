@@ -66,7 +66,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\packages\NuGet.CommandLine.3.4.3\tools\NuGet.exe">
+    <Content Include="..\packages\NuGet.CommandLine.3.3.0\tools\NuGet.exe">
       <Link>tools\NuGet.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -147,7 +147,7 @@
   </UsingTask>
   <Target Name="CreateNuGetPackage">
     <PropertyGroup>
-      <NuGetPath>$(MSBuildThisFileDirectory)..\packages\NuGet.CommandLine.3.4.3\tools\nuget.exe</NuGetPath>
+      <NuGetPath>$(MSBuildThisFileDirectory)..\packages\NuGet.CommandLine.3.3.0\tools\nuget.exe</NuGetPath>
       <NuSpecPath>$(TargetDir)\$(MSBuildProjectName).nuspec</NuSpecPath>
       <PackagePath>$(TargetDir)\$(MSBuildProjectName).nupkg</PackagePath>
     </PropertyGroup>
