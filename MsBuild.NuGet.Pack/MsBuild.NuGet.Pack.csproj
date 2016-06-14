@@ -11,7 +11,6 @@
     <AssemblyName>MsBuild.NuGet.Pack</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <RunOctoPack Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">True</RunOctoPack>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
@@ -35,13 +34,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -70,33 +65,98 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <PropertyGroup>
-    <BuildDependsOn>
-      $(BuildDependsOn);
-      SetOctoPackVersion;
-    </BuildDependsOn>
-  </PropertyGroup>
-  <Target Name="SetOctoPackVersion">
-    <PropertyGroup>
-      <OctoPackPackageVersion>$(GitVersion_NuGetVersion)</OctoPackPackageVersion>
-    </PropertyGroup>
-  </Target>
+  <ItemGroup>
+    <Content Include="..\packages\NuGet.CommandLine.3.4.3\tools\NuGet.exe">
+      <Link>tools\NuGet.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
   -->
-  <Import Project="..\packages\GitVersionTask.3.5.4\build\portable-net+sl+win+wpa+wp\GitVersionTask.targets" Condition="Exists('..\packages\GitVersionTask.3.5.4\build\portable-net+sl+win+wpa+wp\GitVersionTask.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+  <UsingTask TaskName="InsertDummyContent" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <TargetPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.IO.Compression" />
+      <Using Namespace="System.IO.Compression" />
+      <Code Type="Fragment" Language="cs"><![CDATA[        
+        const int BufferSize = 64 * 1024;
+ 
+        var files = Directory.GetFiles(TargetPath, "*.nupkg");
+        
+        foreach (var file in files)
+        {
+            var buffer = new byte[BufferSize];
+            var fileMode = FileMode.Open;
+ 
+            using (var outputFileStream = new FileStream(file, FileMode.Open))
+            {
+				using (var archive = new ZipArchive(outputFileStream, ZipArchiveMode.Update))
+				{
+					var firstEntry = archive.CreateEntry(@"content\net35\_._");
+					
+					using (var firstStream = firstEntry.Open())
+					{
+						firstStream.Flush();
+					}
+					
+					var secondEntry = archive.CreateEntry(@"content\net40\_._");
+					
+					using (var secondStream = secondEntry.Open())
+					{
+						secondStream.Flush();
+					}
+					
+					var thirdEntry = archive.CreateEntry(@"content\netcore45\_._");
+					
+					using (var thirdStream = thirdEntry.Open())
+					{
+						thirdStream.Flush();
+					}
+					
+					var contentTypesEntry = archive.GetEntry("[Content_Types].xml");		
+					string entryContent;
+					
+					using (var contentReadStream = contentTypesEntry.Open())
+					{
+						using (var contentTypesReader = new StreamReader(contentReadStream))
+						{
+							entryContent = contentTypesReader.ReadToEnd();
+						}
+					}
+										
+					entryContent = entryContent.Replace("</Types>", "<Default Extension=\"_\" ContentType=\"application/octet\" /></Types>");
+					
+					using (var contentWriteStream = contentTypesEntry.Open())
+					{
+						using (var writer = new StreamWriter(contentWriteStream))
+						{
+							writer.Write(entryContent);
+						}
+					}
+				}
+            } 
+        }         
+      ]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="CreateNuGetPackage">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <NuGetPath>$(MSBuildThisFileDirectory)..\packages\NuGet.CommandLine.3.4.3\tools\nuget.exe</NuGetPath>
+      <NuSpecPath>$(TargetDir)\$(MSBuildProjectName).nuspec</NuSpecPath>
+      <PackagePath>$(TargetDir)\$(MSBuildProjectName).nupkg</PackagePath>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\GitVersionTask.3.5.4\build\portable-net+sl+win+wpa+wp\GitVersionTask.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitVersionTask.3.5.4\build\portable-net+sl+win+wpa+wp\GitVersionTask.targets'))" />
+    <Error Condition="!Exists($(NuGetPath))" Text="The NuGet commandline was not found at '$(NuGetPath)'" />
+    <Exec Command="$(NuGetPath) pack &quot;$(NuSpecPath)&quot;" WorkingDirectory="$(TargetDir)" ConsoleToMSBuild="True" />
+    <!-- Add a _._ to content in the nupkg
+    <InsertDummyContent TargetPath="$(TargetDir)" /> -->
   </Target>
-  <Import Project="..\packages\OctoPack.3.0.67\tools\OctoPack.targets" Condition="Exists('..\packages\OctoPack.3.0.67\tools\OctoPack.targets')" />
-  <Target Name="EnsureOctoPackImported" BeforeTargets="BeforeBuild" Condition="'$(OctoPackImported)' == ''">
-    <Error Condition="!Exists('..\packages\OctoPack.3.0.67\tools\OctoPack.targets') And ('$(RunOctoPack)' != '' And $(RunOctoPack))" Text="You are trying to build with OctoPack, but the NuGet targets file that OctoPack depends on is not available on this computer. This is probably because the OctoPack package has not been committed to source control, or NuGet Package Restore is not enabled. Please enable NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
-    <Error Condition="Exists('..\packages\OctoPack.3.0.67\tools\OctoPack.targets') And ('$(RunOctoPack)' != '' And $(RunOctoPack))" Text="OctoPack cannot be run because NuGet packages were restored prior to the build running, and the targets file was unavailable when the build started. Please build the project again to include these packages in the build. You may also need to make sure that your build server does not delete packages prior to each build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
+  <Target Name="AfterBuild">
+    <CallTarget Targets="CreateNuGetPackage" />
   </Target>
 </Project>
