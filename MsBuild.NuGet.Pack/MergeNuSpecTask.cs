@@ -217,7 +217,23 @@
                 return "net451";
             }
 
-            return string.Empty;
+            if (targetFrameworkVersion == "v4.5.2")
+            {
+                return "net452";
+            }
+
+            if (targetFrameworkVersion == "v4.6")
+            {
+                return "net46";
+            }
+
+            if (targetFrameworkVersion == "v4.6.1")
+            {
+                return "net461";
+            }
+
+            // Default to v4.0
+            return "net40";
         }
 
         /// <summary>
