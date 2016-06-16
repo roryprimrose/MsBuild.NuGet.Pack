@@ -77,13 +77,13 @@
         }
 
         /// <summary>
-        /// Gets the project packages.
+        ///     Gets the project packages.
         /// </summary>
         /// <param name="packageConfig">
-        /// The package configuration.
+        ///     The package configuration.
         /// </param>
         /// <returns>
-        /// The <see cref="IEnumerable{T}"/>.
+        ///     The <see cref="IEnumerable{T}" />.
         /// </returns>
         private static IEnumerable<XElement> GetProjectPackages(string packageConfig)
         {
@@ -103,13 +103,13 @@
         }
 
         /// <summary>
-        /// Gets the project references.
+        ///     Gets the project references.
         /// </summary>
         /// <param name="projectPath">
-        /// The project path.
+        ///     The project path.
         /// </param>
         /// <returns>
-        /// The <see cref="IEnumerable{T}"/>.
+        ///     The <see cref="IEnumerable{T}" />.
         /// </returns>
         private static IEnumerable<XElement> GetProjectReferences(string projectPath)
         {
@@ -129,13 +129,13 @@
         }
 
         /// <summary>
-        /// Gets the spec dependencies.
+        ///     Gets the spec dependencies.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <returns>
-        /// The <see cref="XElement"/>.
+        ///     The <see cref="XElement" />.
         /// </returns>
         private static XElement GetSpecDependencies(XDocument nuSpecDocument)
         {
@@ -147,13 +147,13 @@
         }
 
         /// <summary>
-        /// Gets the spec references.
+        ///     Gets the spec references.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <returns>
-        /// The <see cref="XElement"/>.
+        ///     The <see cref="XElement" />.
         /// </returns>
         private static XElement GetSpecReferences(XDocument nuSpecDocument)
         {
@@ -165,15 +165,15 @@
         }
 
         /// <summary>
-        /// Gets the target framework.
+        ///     Gets the target framework.
         /// </summary>
         /// <param name="targetFrameworkVersion">
-        /// The target framework version.
+        ///     The target framework version.
         /// </param>
         /// <param name="targetFrameworkProfile">
         /// </param>
         /// <returns>
-        /// The nuget framework target.
+        ///     The nuget framework target.
         /// </returns>
         private static string GetTargetFramework(string targetFrameworkVersion, string targetFrameworkProfile)
         {
@@ -236,55 +236,19 @@
             return "net40";
         }
 
-        /// <summary>
-        /// Sets the element value.
-        /// </summary>
-        /// <param name="parent">
-        /// The parent.
-        /// </param>
-        /// <param name="elementName">
-        /// Name of the element.
-        /// </param>
-        /// <param name="value">
-        /// The value.
-        /// </param>
-        private static void SetElementValue(XElement parent, string elementName, string value)
+        private static bool IsValidVersion(string version)
         {
-            var element = GetOrCreateElement(parent, elementName);
-
-            element.Value = value;
+            return Regex.IsMatch(version, @"^\d+(\.\d+){0,3}$");
         }
 
         /// <summary>
-        /// Sets the element value if empty.
-        /// </summary>
-        /// <param name="parent">
-        /// The parent.
-        /// </param>
-        /// <param name="elementName">
-        /// Name of the element.
-        /// </param>
-        /// <param name="value">
-        /// The value.
-        /// </param>
-        private static void SetElementValueIfEmpty(XElement parent, string elementName, string value)
-        {
-            var element = GetOrCreateElement(parent, elementName);
-
-            if (string.IsNullOrWhiteSpace(element.Value))
-            {
-                element.Value = value;
-            }
-        }
-
-        /// <summary>
-        /// Merges the file.
+        ///     Merges the file.
         /// </summary>
         /// <param name="document">
-        /// The document.
+        ///     The document.
         /// </param>
         /// <param name="primaryOutputAssembly">
-        /// The primary output assembly.
+        ///     The primary output assembly.
         /// </param>
         private void MergeFile(XDocument document, string primaryOutputAssembly)
         {
@@ -305,20 +269,20 @@
 
             files.Add(
                 new XElement(
-                    defaultNamespace + "file", 
-                    new XAttribute("src", srcValue), 
-                    new XAttribute("target", "lib" + frameworkFolder), 
+                    defaultNamespace + "file",
+                    new XAttribute("src", srcValue),
+                    new XAttribute("target", "lib" + frameworkFolder),
                     new XAttribute("exclude", FileExclusionPattern)));
         }
 
         /// <summary>
-        /// Merges the version.
+        ///     Merges the version.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <param name="assemblyPath">
-        /// The assembly path.
+        ///     The assembly path.
         /// </param>
         private void MergeMetadata(XDocument nuSpecDocument, string assemblyPath)
         {
@@ -378,19 +342,14 @@
             SetElementValueIfEmpty(metadata, "owners", currentUser);
         }
 
-        private static bool IsValidVersion(string version)
-        {
-            return Regex.IsMatch(version, @"^\d+(\.\d+){0,3}$");
-        }
-
         /// <summary>
-        /// Merges the package dependencies.
+        ///     Merges the package dependencies.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <param name="packageConfig">
-        /// The package configuration.
+        ///     The package configuration.
         /// </param>
         private void MergePackageDependencies(XDocument nuSpecDocument, string packageConfig)
         {
@@ -415,8 +374,8 @@
                     // We need to add the package dependency into the nuspec file
                     specDependencies.Add(
                         new XElement(
-                            defaultNamespace + "dependency", 
-                            new XAttribute("id", id), 
+                            defaultNamespace + "dependency",
+                            new XAttribute("id", id),
                             new XAttribute("version", version)));
                 }
                 else
@@ -428,13 +387,13 @@
         }
 
         /// <summary>
-        /// Merges the references.
+        ///     Merges the references.
         /// </summary>
         /// <param name="nuSpecDocument">
-        /// The nu spec document.
+        ///     The nu spec document.
         /// </param>
         /// <param name="projectPath">
-        /// The project path.
+        ///     The project path.
         /// </param>
         private void MergeReferences(XDocument nuSpecDocument, string projectPath)
         {
@@ -443,6 +402,7 @@
             var specReferences = GetSpecReferences(nuSpecDocument);
             var references = GetProjectReferences(projectPath);
             var defaultNamespace = nuSpecDocument.Root.GetDefaultNamespace();
+            const string TargetFramework = "net";
 
             var currentSpecDependencies =
                 specReferences.Elements().Where(x => x.Name.LocalName == "frameworkAssembly").ToList();
@@ -458,13 +418,58 @@
                 {
                     // We need to add the project reference into the nuspec file
                     specReferences.Add(
-                        new XElement(defaultNamespace + "frameworkAssembly", new XAttribute("assemblyName", include)));
+                        new XElement(
+                            defaultNamespace + "frameworkAssembly",
+                            new XAttribute("assemblyName", include),
+                            new XAttribute("targetFramework", TargetFramework)));
                 }
                 else
                 {
                     // We need to update the assembly reference in the spec
                     specAssembly.SetAttributeValue("assemblyName", include);
+                    specAssembly.SetAttributeValue("targetFramework", TargetFramework);
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Sets the element value.
+        /// </summary>
+        /// <param name="parent">
+        ///     The parent.
+        /// </param>
+        /// <param name="elementName">
+        ///     Name of the element.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        private static void SetElementValue(XElement parent, string elementName, string value)
+        {
+            var element = GetOrCreateElement(parent, elementName);
+
+            element.Value = value;
+        }
+
+        /// <summary>
+        ///     Sets the element value if empty.
+        /// </summary>
+        /// <param name="parent">
+        ///     The parent.
+        /// </param>
+        /// <param name="elementName">
+        ///     Name of the element.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        private static void SetElementValueIfEmpty(XElement parent, string elementName, string value)
+        {
+            var element = GetOrCreateElement(parent, elementName);
+
+            if (string.IsNullOrWhiteSpace(element.Value))
+            {
+                element.Value = value;
             }
         }
 
