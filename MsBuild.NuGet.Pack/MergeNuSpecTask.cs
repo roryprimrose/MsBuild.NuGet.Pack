@@ -46,6 +46,67 @@
             return true;
         }
 
+        private string DeterminePackageVersion(string assemblyPath, FileVersionInfo info)
+        {
+            var version = PackageVersion;
+
+            if (string.IsNullOrEmpty(version))
+            {
+                LogMessage("Using version {0} from the PackageVersion property", MessageImportance.Low, version);
+
+                return version;
+            }
+
+            var isValidProductVersion = IsValidVersion(info.ProductVersion);
+
+            if (isValidProductVersion)
+            {
+                if (IncludeBuildVersion)
+                {
+                    version = info.ProductVersion;
+                }
+                else if (UseBuildVersionAsPatch)
+                {
+                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
+                }
+                else
+                {
+                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
+                }
+
+                LogMessage(
+                    "Using version {0} from {1} product version {2}",
+                    MessageImportance.Low,
+                    version,
+                    assemblyPath,
+                    info.ProductVersion);
+            }
+            else
+            {
+                if (IncludeBuildVersion)
+                {
+                    version = info.FileVersion;
+                }
+                else if (UseBuildVersionAsPatch)
+                {
+                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
+                }
+                else
+                {
+                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FileBuildPart;
+                }
+
+                LogMessage(
+                    "Using version {0} from {1} file version {2}",
+                    MessageImportance.Low,
+                    version,
+                    assemblyPath,
+                    info.FileVersion);
+            }
+
+            return version;
+        }
+
         /// <summary>
         ///     Gets the current user.
         /// </summary>
@@ -293,44 +354,7 @@
 
             SetElementValue(metadata, "title", info.ProductName);
 
-            string version;
-            bool isValidProductVersion = IsValidVersion(info.ProductVersion);
-
-            if (IncludeBuildVersion)
-            {
-                if (isValidProductVersion)
-                {
-                    version = info.ProductVersion;
-                }
-                else
-                {
-                    version = info.FileVersion;
-                }
-            }
-            else if (UseBuildVersionAsPatch)
-            {
-                if (isValidProductVersion)
-                {
-                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
-                }
-                else
-                {
-                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
-                }
-            }
-            else
-            {
-                if (isValidProductVersion)
-                {
-                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
-                }
-                else
-                {
-                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FileBuildPart;
-                }
-            }
-
-            LogMessage("Using version {0} from {1}", MessageImportance.Low, version, assemblyPath);
+            var version = DeterminePackageVersion(assemblyPath, info);
 
             SetElementValue(metadata, "version", version);
             SetElementValueIfEmpty(metadata, "summary", info.Comments);
@@ -507,6 +531,19 @@
         /// </value>
         [Required]
         public string NuSpecPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets the package version.
+        /// </summary>
+        /// <value>
+        ///     The package version.
+        /// </value>
+        [Required]
+        public string PackageVersion
         {
             get;
             set;
