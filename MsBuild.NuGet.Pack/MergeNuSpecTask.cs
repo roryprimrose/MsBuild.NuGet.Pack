@@ -278,12 +278,28 @@
                 return "net451";
             }
 
-            return string.Empty;
+            if (targetFrameworkVersion == "v4.5.2")
+            {
+                return "net452";
+            }
+
+            if (targetFrameworkVersion == "v4.6")
+            {
+                return "net46";
+            }
+
+            if (targetFrameworkVersion == "v4.6.1")
+            {
+                return "net461";
+            }
+
+            // Default to v4.0
+            return "net40";
         }
 
         private static bool IsValidVersion(string version)
         {
-            return Regex.IsMatch(version, @"^\d+.\d+.\d+(-[a-zA-Z0-9-]+)?$");
+            return Regex.IsMatch(version, @"^\d+(\.\d+){0,3}$");
         }
 
         /// <summary>
@@ -410,6 +426,7 @@
             var specReferences = GetSpecReferences(nuSpecDocument);
             var references = GetProjectReferences(projectPath);
             var defaultNamespace = nuSpecDocument.Root.GetDefaultNamespace();
+            const string TargetFramework = "net";
 
             var currentSpecDependencies =
                 specReferences.Elements().Where(x => x.Name.LocalName == "frameworkAssembly").ToList();
@@ -425,12 +442,16 @@
                 {
                     // We need to add the project reference into the nuspec file
                     specReferences.Add(
-                        new XElement(defaultNamespace + "frameworkAssembly", new XAttribute("assemblyName", include)));
+                        new XElement(
+                            defaultNamespace + "frameworkAssembly",
+                            new XAttribute("assemblyName", include),
+                            new XAttribute("targetFramework", TargetFramework)));
                 }
                 else
                 {
                     // We need to update the assembly reference in the spec
                     specAssembly.SetAttributeValue("assemblyName", include);
+                    specAssembly.SetAttributeValue("targetFramework", TargetFramework);
                 }
             }
         }
