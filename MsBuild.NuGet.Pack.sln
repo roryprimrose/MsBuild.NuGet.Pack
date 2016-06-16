@@ -1,14 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsBuild.NuGet.Pack", "MsBuild.NuGet.Pack\MsBuild.NuGet.Pack.csproj", "{FB4A02BC-C768-41A0-AF4C-A399079CE96B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{1FC83B2C-3D58-4616-B075-1D0424019405}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\packages.config = .nuget\packages.config
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsBuild.NuGet.Pack.Tests", "MsBuild.NuGet.Pack.Tests\MsBuild.NuGet.Pack.Tests.csproj", "{8DF09C78-0F4C-4E48-ADB7-87A6B6847CAB}"
 EndProject
