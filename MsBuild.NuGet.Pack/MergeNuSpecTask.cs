@@ -316,7 +316,7 @@
             LogMessage("Merging file reference from project output");
 
             var package = GetElement(document, "package");
-            var files = GetElement(package, "files");
+            var files = GetOrCreateElement(package, "files");
             var defaultNamespace = document.Root.GetDefaultNamespace();
             var outputName = Path.GetFileNameWithoutExtension(primaryOutputAssembly);
             var srcValue = "**\\" + outputName + ".*";

@@ -121,7 +121,7 @@
                         "The NuSpec file does not contain a <package> XML element. The NuSpec file appears to be invalid."));
             }
 
-            var metadata = GetElement(package, "metadata");
+            var metadata = GetOrCreateElement(package, "metadata");
 
             if (metadata == null)
             {
