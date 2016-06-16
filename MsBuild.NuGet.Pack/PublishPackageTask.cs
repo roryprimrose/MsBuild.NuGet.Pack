@@ -113,7 +113,7 @@
             // Open the nuspec file and extract the version
             var spec = OpenXmlDocument(NuSpecPath);
             var metadata = GetSpecMetadata(spec);
-            var versionElement = GetElement(metadata, "version");
+            var versionElement = GetOrCreateElement(metadata, "version");
 
             return versionElement.Value;
         }
