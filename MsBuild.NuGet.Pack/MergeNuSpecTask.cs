@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -24,24 +25,33 @@
         /// <inheritdoc />
         public override bool Execute()
         {
-            var packageConfig = Path.Combine(ProjectDirectory, "packages.config");
-
-            var nuSpecDocument = OpenXmlDocument(NuSpecPath);
-
-            MergeMetadata(nuSpecDocument, PrimaryOutputAssembly);
-
-            if (File.Exists(packageConfig))
+            try
             {
-                MergePackageDependencies(nuSpecDocument, packageConfig);
+                var packageConfig = Path.Combine(ProjectDirectory, "packages.config");
+
+                var nuSpecDocument = OpenXmlDocument(NuSpecPath);
+
+                MergeMetadata(nuSpecDocument, PrimaryOutputAssembly);
+
+                if (File.Exists(packageConfig))
+                {
+                    MergePackageDependencies(nuSpecDocument, packageConfig);
+                }
+
+                var projectPath = Path.Combine(ProjectDirectory, ProjectFile);
+
+                MergeReferences(nuSpecDocument, projectPath);
+
+                MergeFile(nuSpecDocument, PrimaryOutputAssembly);
+
+                nuSpecDocument.Save(NuSpecPath);
             }
+            catch (Exception e)
+            {
+                Log.LogError(e.Message);
 
-            var projectPath = Path.Combine(ProjectDirectory, ProjectFile);
-
-            MergeReferences(nuSpecDocument, projectPath);
-
-            MergeFile(nuSpecDocument, PrimaryOutputAssembly);
-
-            nuSpecDocument.Save(NuSpecPath);
+                return false;
+            }
 
             return true;
         }
@@ -50,59 +60,57 @@
         {
             var version = PackageVersion;
 
-            if (string.IsNullOrEmpty(version))
+            if (string.IsNullOrWhiteSpace(version) == false)
             {
-                LogMessage("Using version {0} from the PackageVersion property", MessageImportance.Low, version);
+                if (IsValidVersion(version) == false)
+                {
+                    var message = string.Format(CultureInfo.CurrentCulture, "The PackageVersion '{0}' is not a valid NuGet version.", PackageVersion);
+
+                    throw new InvalidOperationException(message);
+                }
+
+                LogMessage("Using version {0} from the PackageVersion property", MessageImportance.High, version);
 
                 return version;
             }
-
+            
             var isValidProductVersion = IsValidVersion(info.ProductVersion);
 
-            if (isValidProductVersion)
+            if (IncludeBuildVersion)
             {
-                if (IncludeBuildVersion)
+                if (isValidProductVersion)
                 {
                     version = info.ProductVersion;
                 }
-                else if (UseBuildVersionAsPatch)
+                else
+                {
+                    version = info.FileVersion;
+                }
+            }
+            else if (UseBuildVersionAsPatch)
+            {
+                if (isValidProductVersion)
                 {
                     version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
                 }
                 else
                 {
-                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
+                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
                 }
-
-                LogMessage(
-                    "Using version {0} from {1} product version {2}",
-                    MessageImportance.Low,
-                    version,
-                    assemblyPath,
-                    info.ProductVersion);
             }
             else
             {
-                if (IncludeBuildVersion)
+                if (isValidProductVersion)
                 {
-                    version = info.FileVersion;
-                }
-                else if (UseBuildVersionAsPatch)
-                {
-                    version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
+                    version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
                 }
                 else
                 {
                     version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FileBuildPart;
                 }
-
-                LogMessage(
-                    "Using version {0} from {1} file version {2}",
-                    MessageImportance.Low,
-                    version,
-                    assemblyPath,
-                    info.FileVersion);
             }
+
+            LogMessage("Using version {0} from {1}", MessageImportance.High, version, assemblyPath);
 
             return version;
         }
@@ -299,7 +307,8 @@
 
         private static bool IsValidVersion(string version)
         {
-            return Regex.IsMatch(version, @"^\d+(\.\d+){0,3}$");
+            // Validates semver v1.0 http://semver.org/spec/v1.0.0.html
+            return Regex.IsMatch(version, @"^\d+.\d+.\d+(-[a-zA-Z0-9-]+)?$");
         }
 
         /// <summary>
@@ -522,7 +531,7 @@
             get;
             set;
         }
-
+        
         /// <summary>
         ///     Gets or sets the nuspec path.
         /// </summary>
@@ -535,14 +544,13 @@
             get;
             set;
         }
-
+        
         /// <summary>
         ///     Gets or sets the package version.
         /// </summary>
         /// <value>
         ///     The package version.
         /// </value>
-        [Required]
         public string PackageVersion
         {
             get;

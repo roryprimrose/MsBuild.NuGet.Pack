@@ -1,11 +1,13 @@
 ﻿namespace MsBuild.NuGet.Pack
 {
     using System;
+    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Xml.Linq;
     using Microsoft.Build.Framework;
+    using Microsoft.Build.Utilities;
 
     /// <summary>
     ///     The <see cref="NuSpecTask" />
@@ -13,6 +15,12 @@
     /// </summary>
     public abstract class NuSpecTask : ITask
     {
+        /// <inheritdoc />
+        protected NuSpecTask()
+        {
+            Log = new TaskLoggingHelper(this);
+        }
+
         /// <inheritdoc />
         public abstract bool Execute();
 
@@ -156,9 +164,11 @@
             }
 
             var taskName = GetType().Name;
-
-            BuildEngine.LogMessageEvent(
-                new BuildMessageEventArgs(taskName + ": " + messageToWrite, taskName, taskName, importance));
+            if (BuildEngine == null)
+                Trace.WriteLine(taskName + ": " + messageToWrite);
+            else
+                BuildEngine.LogMessageEvent(
+                    new BuildMessageEventArgs(taskName + ": " + messageToWrite, taskName, taskName, importance));
         }
 
         /// <summary>
@@ -175,6 +185,14 @@
             var xml = File.ReadAllText(specFilePath);
 
             return XDocument.Parse(xml);
+        }
+
+        /// <summary>
+        ///     Gets the logger for the task.
+        /// </summary>
+        public TaskLoggingHelper Log
+        {
+            get;
         }
     }
 }

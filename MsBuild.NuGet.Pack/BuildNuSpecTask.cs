@@ -1,6 +1,5 @@
 ﻿namespace MsBuild.NuGet.Pack
 {
-    using System;
     using System.Diagnostics;
     using System.IO;
     using Microsoft.Build.Framework;
@@ -9,47 +8,50 @@
     ///     The <see cref="BuildNuSpecTask" />
     ///     class executes a NuGet pack on a NuSpec file.
     /// </summary>
-    public class BuildNuSpecTask : ITask
+    public class BuildNuSpecTask : NuSpecTask
     {
         /// <inheritdoc />
-        public bool Execute()
+        public override bool Execute()
         {
             var processInfo = new ProcessStartInfo(NuGetPath)
             {
-                Arguments = "pack \"" + NuSpecPath + "\"", 
-                CreateNoWindow = true, 
-                RedirectStandardError = true, 
+                Arguments = "pack \"" + NuSpecPath + "\" -NoPackageAnalysis -NonInteractive -Verbosity Detailed",
+                CreateNoWindow = true,
+                RedirectStandardError = true,
                 RedirectStandardOutput = true,
-                UseShellExecute = false, 
+                UseShellExecute = false,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 WorkingDirectory = OutDir
             };
 
             LogMessage("Building NuGet package using " + "'" + processInfo.FileName + " " + processInfo.Arguments + "'");
 
-            var process = Process.Start(processInfo);
-
-            var completed = process.WaitForExit(30000);
-
-            if (completed == false)
+            using (var process = Process.Start(processInfo))
             {
-                LogError("Timeout, creating the NuGet package took longer than 30 seconds.");
-            }
+                var completed = process.WaitForExit(30000);
 
-            using (var reader = process.StandardOutput)
-            {
-                var output = reader.ReadToEnd();
-
-                LogMessage(output);
-            }
-
-            using (var errorReader = process.StandardError)
-            {
-                var error = errorReader.ReadToEnd();
-
-                if (string.IsNullOrWhiteSpace(error) == false)
+                using (var reader = process.StandardOutput)
                 {
-                    LogError(error);
+                    var output = reader.ReadToEnd();
+
+                    LogMessage(output);
+                }
+
+                using (var errorReader = process.StandardError)
+                {
+                    var error = errorReader.ReadToEnd();
+
+                    if (string.IsNullOrWhiteSpace(error) == false)
+                    {
+                        LogError(error);
+
+                        return false;
+                    }
+                }
+
+                if (completed == false)
+                {
+                    LogError("Timeout, creating the NuGet package took longer than 30 seconds.");
 
                     return false;
                 }
@@ -59,10 +61,10 @@
         }
 
         /// <summary>
-        /// The log message.
+        ///     The log message.
         /// </summary>
         /// <param name="message">
-        /// The message.
+        ///     The message.
         /// </param>
         private void LogError(string message)
         {
@@ -76,49 +78,16 @@
 
             BuildEngine.LogErrorEvent(
                 new BuildErrorEventArgs(
-                    "BuildNuSpecTask", 
+                    "BuildNuSpecTask",
                     "Failure",
-                    path, 
-                    0, 
-                    0, 
-                    0, 
-                    0, 
-                    message, 
-                    "BuildNuSpecTask", 
+                    path,
+                    0,
+                    0,
+                    0,
+                    0,
+                    message,
+                    "BuildNuSpecTask",
                     "BuildNuSpecTask"));
-        }
-
-        /// <summary>
-        /// Logs the message.
-        /// </summary>
-        /// <param name="message">
-        /// The message.
-        /// </param>
-        /// <param name="importance">
-        /// The importance.
-        /// </param>
-        private void LogMessage(string message, MessageImportance importance = MessageImportance.Normal)
-        {
-            BuildEngine.LogMessageEvent(
-                new BuildMessageEventArgs(
-                    "BuildNuSpecTask: " + message, 
-                    "BuildNuSpecTask", 
-                    "BuildNuSpecTask", 
-                    importance));
-        }
-
-        /// <inheritdoc />
-        public IBuildEngine BuildEngine
-        {
-            get;
-            set;
-        }
-
-        /// <inheritdoc />
-        public ITaskHost HostObject
-        {
-            get;
-            set;
         }
 
         /// <summary>
