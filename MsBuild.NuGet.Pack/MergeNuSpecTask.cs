@@ -64,7 +64,10 @@
             {
                 if (IsValidVersion(version) == false)
                 {
-                    var message = string.Format(CultureInfo.CurrentCulture, "The PackageVersion '{0}' is not a valid NuGet version.", PackageVersion);
+                    var message = string.Format(
+                        CultureInfo.CurrentCulture,
+                        "The PackageVersion '{0}' is not a valid NuGet version.",
+                        PackageVersion);
 
                     throw new InvalidOperationException(message);
                 }
@@ -73,7 +76,7 @@
 
                 return version;
             }
-            
+
             var isValidProductVersion = IsValidVersion(info.ProductVersion);
 
             if (IncludeBuildVersion)
@@ -329,8 +332,13 @@
             var defaultNamespace = document.Root.GetDefaultNamespace();
             var outputName = Path.GetFileNameWithoutExtension(primaryOutputAssembly);
             var srcValue = "**\\" + outputName + ".*";
-            var targetFramework = GetTargetFramework(TargetFrameworkVersion, TargetFrameworkProfile);
+            string targetFramework = null;
             var frameworkFolder = string.Empty;
+
+            if (TargetSpecificFramework)
+            {
+                targetFramework = GetTargetFramework(TargetFrameworkVersion, TargetFrameworkProfile);
+            }
 
             if (string.IsNullOrWhiteSpace(targetFramework) == false)
             {
@@ -531,7 +539,7 @@
             get;
             set;
         }
-        
+
         /// <summary>
         ///     Gets or sets the nuspec path.
         /// </summary>
@@ -544,7 +552,7 @@
             get;
             set;
         }
-        
+
         /// <summary>
         ///     Gets or sets the package version.
         /// </summary>
@@ -610,6 +618,15 @@
         /// </value>
         [Required]
         public string TargetFrameworkVersion
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Determines whether the NuGet package will target the framework version of the project.
+        /// </summary>
+        public bool TargetSpecificFramework
         {
             get;
             set;

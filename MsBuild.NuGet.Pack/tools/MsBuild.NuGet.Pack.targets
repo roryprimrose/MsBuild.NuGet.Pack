@@ -23,6 +23,7 @@
     <UseBuildVersionAsPatch Condition="'$(UseBuildVersionAsPatch)'==''">false</UseBuildVersionAsPatch>
     <FileExclusionPattern Condition="'$(FileExclusionPattern)'==''">*.CodeAnalysisLog.xml;*.lastcodeanalysissucceeded;*Test*.*</FileExclusionPattern>
     <PackageVersion></PackageVersion>
+    <TargetSpecificFramework Condition="'$(TargetSpecificFramework)'==''">false</TargetSpecificFramework>
     
     <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(MSBuildThisFileDirectory)\nuget.exe</NuGetExePath>
 	  <NuSpecFileName Condition="'$(NuSpecFileName)' == ''">$(MSBuildProjectName).nuspec</NuSpecFileName>
@@ -57,7 +58,8 @@
       UseBuildVersionAsPatch="$(UseBuildVersionAsPatch)"
       FileExclusionPattern="$(FileExclusionPattern)"
       TargetFrameworkVersion="$(TargetFrameworkVersion)"
-      TargetFrameworkProfile="$(TargetFrameworkProfile)" />
+      TargetFrameworkProfile="$(TargetFrameworkProfile)"
+      TargetSpecificFramework="$(TargetSpecificFramework)"/>
 
     <BuildNuSpecTask
       NuGetPath="$(NuGetExePath)"
