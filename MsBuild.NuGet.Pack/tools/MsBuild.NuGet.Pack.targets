@@ -29,7 +29,8 @@
 	  <NuSpecFileName Condition="'$(NuSpecFileName)' == ''">$(MSBuildProjectName).nuspec</NuSpecFileName>
     <ProjectFile Condition="'$(ProjectFile)' == ''">$(MSBuildProjectFile)</ProjectFile>
     <ProjectDirectory Condition="'$(ProjectDirectory)' == ''">$(MSBuildProjectDirectory)</ProjectDirectory>
-    <NuSpecPath>$(TargetDir)\$(NuSpecFileName)</NuSpecPath>
+    <SourceNuSpecPath>$(ProjectDirectory)\$(NuSpecFileName)</SourceNuSpecPath>
+    <TargetNuSpecPath>$(ProjectDirectory)\$(IntermediateOutputPath)\$(NuSpecFileName)</TargetNuSpecPath>
 
     <RunNuGetPublish Condition="'$(RunNuGetPublish)'==''">false</RunNuGetPublish>
     <NuGetServer Condition="'$(NuGetServer)' == ''"></NuGetServer>
@@ -47,9 +48,12 @@
     <PropertyGroup>
       <NugetPackageTargetDir Condition="'$(NugetPackageTargetDir)' == ''">$(TargetDir)</NugetPackageTargetDir>
     </PropertyGroup>
+    
+    <Delete Files="$(TargetNuSpecPath)" Condition="Exists($(TargetNuSpecPath))" ContinueOnError="True" />
+    <Copy SourceFiles="$(SourceNuSpecPath)" DestinationFiles="$(TargetNuSpecPath)" OverwriteReadOnlyFiles="True" />
 
     <MergeNuSpecTask
-      NuSpecPath="$(NuSpecPath)"
+      NuSpecPath="$(TargetNuSpecPath)"
       ProjectDirectory="$(ProjectDirectory)"
       ProjectFile="$(ProjectFile)"
       PrimaryOutputAssembly="$(TargetPath)"
@@ -63,7 +67,7 @@
 
     <BuildNuSpecTask
       NuGetPath="$(NuGetExePath)"
-      NuSpecPath="$(NuSpecPath)"
+      NuSpecPath="$(TargetNuSpecPath)"
       ProjectDirectory="$(ProjectDirectory)"
       OutDir="$(NugetPackageTargetDir)" />
 

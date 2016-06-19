@@ -103,19 +103,7 @@
 			Write-Host "Creating $nuspecName $nuspecPath"
 			Add-Content $nuspecPath $nuspecData
 			$project.ProjectItems.AddFromFile($nuspecPath)
-			$project.ProjectItems.Item($nuspecName).Properties.Item("CopyToOutputDirectory").Value = 2
 		}
-	}
-	else
-	{
-		ForEach ($nuspec in $nuspecs) 
-		{
-			$nuspecName = $nuspec.Name
-			Write-Host "Setting $nuspecName to Copy if newer on compile" 
-			$nuspec.Properties.Item("CopyToOutputDirectory").Value = 2
-
-			# $project.Properties.Item("NuSpecFileName").Value = $nuspecName
-		} 
 	}
 
     $project.Save()

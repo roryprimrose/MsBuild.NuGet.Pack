@@ -15,7 +15,7 @@
         {
             var processInfo = new ProcessStartInfo(NuGetPath)
             {
-                Arguments = "pack \"" + NuSpecPath + "\" -NoPackageAnalysis -NonInteractive -Verbosity Detailed",
+                Arguments = "pack \"" + NuSpecPath + "\" -OutputDirectory \"" + OutDir + " \" -BasePath \"" + OutDir + " \" -NoPackageAnalysis -NonInteractive -Verbosity Detailed",
                 CreateNoWindow = true,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
