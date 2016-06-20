@@ -3,6 +3,14 @@
   <UsingTask TaskName="MsBuild.NuGet.Pack.BuildNuSpecTask" AssemblyFile="MsBuild.NuGet.Pack.dll" />
   <UsingTask TaskName="MsBuild.NuGet.Pack.PublishPackageTask" AssemblyFile="MsBuild.NuGet.Pack.dll" />
 
+  <!-- Hook into the BeforeClean activity -->
+  <PropertyGroup>
+    <CleanDependsOn>
+      $(CleanDependsOn);
+      CleanPackages
+    </CleanDependsOn>
+  </PropertyGroup>
+
   <!-- Hook into the AfterBuild activity -->
   <PropertyGroup>
     <BuildDependsOn>
@@ -11,7 +19,7 @@
       PublishPackage
     </BuildDependsOn>
   </PropertyGroup>
-  
+
   <!--
   Configuration properties - you can override these from the command line
   -->
@@ -24,31 +32,37 @@
     <FileExclusionPattern Condition="'$(FileExclusionPattern)'==''">*.CodeAnalysisLog.xml;*.lastcodeanalysissucceeded;*Test*.*</FileExclusionPattern>
     <PackageVersion></PackageVersion>
     <TargetSpecificFramework Condition="'$(TargetSpecificFramework)'==''">false</TargetSpecificFramework>
-    
+
     <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(MSBuildThisFileDirectory)\nuget.exe</NuGetExePath>
-	  <NuSpecFileName Condition="'$(NuSpecFileName)' == ''">$(MSBuildProjectName).nuspec</NuSpecFileName>
+    <NuSpecFileName Condition="'$(NuSpecFileName)' == ''">$(MSBuildProjectName).nuspec</NuSpecFileName>
     <ProjectFile Condition="'$(ProjectFile)' == ''">$(MSBuildProjectFile)</ProjectFile>
     <ProjectDirectory Condition="'$(ProjectDirectory)' == ''">$(MSBuildProjectDirectory)</ProjectDirectory>
     <SourceNuSpecPath>$(ProjectDirectory)\$(NuSpecFileName)</SourceNuSpecPath>
     <TargetNuSpecPath>$(ProjectDirectory)\$(IntermediateOutputPath)\$(NuSpecFileName)</TargetNuSpecPath>
+    <NugetPackageTargetDir Condition="'$(NugetPackageTargetDir)' == ''">$(TargetDir)</NugetPackageTargetDir>
 
     <RunNuGetPublish Condition="'$(RunNuGetPublish)'==''">false</RunNuGetPublish>
     <NuGetServer Condition="'$(NuGetServer)' == ''"></NuGetServer>
     <NuGetApiKey Condition="'$(NuGetApiKey)' == ''"></NuGetApiKey>
-    
+
   </PropertyGroup>
 
-  <!-- 
-  Create Octopus Deploy package
-  -->
+  <Target Name="CleanPackages">
+
+    <Message Text="Removing existing nupkg files from $(NugetPackageTargetDir)" />
+
+    <ItemGroup>
+      <PreviousPackages Include="$(NugetPackageTargetDir)\**\*.nupkg" />
+    </ItemGroup>
+
+    <Delete Files="@(PreviousPackages)" ContinueOnError="True" />
+
+  </Target>
+
   <Target Name="BuildPackage" Condition="$(RunNuGetPack)">
-    
+
     <Error Condition="!Exists($(NuGetExePath))" Text="The NuGet commandline was not found at '$(NuGetExePath)'" />
 
-    <PropertyGroup>
-      <NugetPackageTargetDir Condition="'$(NugetPackageTargetDir)' == ''">$(TargetDir)</NugetPackageTargetDir>
-    </PropertyGroup>
-    
     <Delete Files="$(TargetNuSpecPath)" Condition="Exists($(TargetNuSpecPath))" ContinueOnError="True" />
     <Copy SourceFiles="$(SourceNuSpecPath)" DestinationFiles="$(TargetNuSpecPath)" OverwriteReadOnlyFiles="True" />
 
@@ -77,10 +91,6 @@
 
     <Error Condition="!Exists($(NuGetExePath))" Text="The NuGet commandline was not found at '$(NuGetExePath)'" />
 
-    <PropertyGroup>
-      <NugetPackageTargetDir Condition="'$(NugetPackageTargetDir)' == ''">$(TargetDir)</NugetPackageTargetDir>
-    </PropertyGroup>
-
     <PublishPackageTask
       NuGetPath="$(NuGetExePath)"
       NuSpecPath="$(NuSpecPath)"
@@ -89,5 +99,5 @@
       OutDir="$(NugetPackageTargetDir)" />
 
   </Target>
-  
+
 </Project>
