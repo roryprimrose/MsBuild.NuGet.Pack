@@ -175,6 +175,22 @@
         }
 
         /// <summary>
+        ///     Gets a regex that can be used to check package exclusions.
+        /// </summary>
+        /// <param name="exclusionPatterns">
+        ///     The package exclusion patterns.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Regex" />.
+        /// </returns>
+        public static Regex GetPackageExclusions(string exclusionPatterns)
+        {
+            var regexPatterns = exclusionPatterns.Split(';').Select(x => Regex.Escape(x).Replace(@"\*", ".*").Replace(@"\?", "."));
+
+            return new Regex("^" + String.Join("|", regexPatterns) + "$");
+        }
+
+        /// <summary>
         ///     Gets the project references.
         /// </summary>
         /// <param name="projectPath">
@@ -400,12 +416,18 @@
             var packageDependencies = GetProjectPackages(packageConfig);
             var defaultNamespace = nuSpecDocument.Root.GetDefaultNamespace();
 
+            var packageExclusions = GetPackageExclusions(PackageExclusionPattern);
+
             var currentSpecDependencies =
                 specDependencies.Elements().Where(x => x.Name.LocalName == "dependency").ToList();
 
             foreach (var packageDependency in packageDependencies)
             {
                 var id = packageDependency.Attribute("id").Value;
+
+                // Check the package ID against the exclusion list
+                if (packageExclusions.IsMatch(id)) continue; // Skip to the next package
+
                 var version = packageDependency.Attribute("version").Value;
 
                 var specDependency = currentSpecDependencies.SingleOrDefault(x => x.Attribute("id").Value == id);
@@ -522,6 +544,19 @@
         /// </value>
         [Required]
         public string FileExclusionPattern
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets the package exclusion pattern.
+        /// </summary>
+        /// <value>
+        ///     The package exclusion pattern.
+        /// </value>
+        [Required]
+        public string PackageExclusionPattern
         {
             get;
             set;

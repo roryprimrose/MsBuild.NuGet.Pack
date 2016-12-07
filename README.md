@@ -11,6 +11,8 @@ This NuGet package provides MsBuild support for Visual Studio projects. It uses 
 
 **FileExclusionPattern** - defaults to _\*.CodeAnalysisLog.xml;\*.lastcodeanalysissucceeded;\*Test\*.\*_. Controls which file paths are excluded from the automatic bundling of files into the package.
 
+**PackageExclusionPattern** - defaults to _MsBuild.NuGet.Pack_. Controls which packages are excluded from the automatic inclusion of package dependencies into the package.
+
 
 ## Publish Package Properties
 **RunNuGetPublish** (True/False) - defaults to False. Publishes the NuGet package after it has been created.
