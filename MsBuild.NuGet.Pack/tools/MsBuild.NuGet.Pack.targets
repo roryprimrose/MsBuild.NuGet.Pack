@@ -26,6 +26,7 @@
   <PropertyGroup>
     <MsBuildNuGetPackImported>true</MsBuildNuGetPackImported>
 
+    <RunNuGetPack Condition="'$(RunNuGetPack)'=='' AND '$(Configuration)'=='Release'">true</RunNuGetPack>
     <RunNuGetPack Condition="'$(RunNuGetPack)'==''">false</RunNuGetPack>
     <IncludeBuildVersion Condition="'$(IncludeBuildVersion)'==''">false</IncludeBuildVersion>
     <UseBuildVersionAsPatch Condition="'$(UseBuildVersionAsPatch)'==''">false</UseBuildVersionAsPatch>

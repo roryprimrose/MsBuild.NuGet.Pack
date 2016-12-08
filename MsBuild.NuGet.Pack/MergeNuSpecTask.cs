@@ -31,6 +31,8 @@
 
                 var nuSpecDocument = OpenXmlDocument(NuSpecPath);
 
+                LoadSettings(nuSpecDocument);
+
                 MergeMetadata(nuSpecDocument, PrimaryOutputAssembly);
 
                 if (File.Exists(packageConfig))
@@ -367,6 +369,61 @@
                     new XAttribute("src", srcValue),
                     new XAttribute("target", "lib" + frameworkFolder),
                     new XAttribute("exclude", FileExclusionPattern)));
+        }
+
+        /// <summary>
+        ///     Loads settings defined in the processing instruction in nuSpecDocument.
+        /// </summary>
+        /// <param name="nuSpecDocument">
+        ///     The nu spec document.
+        /// </param>
+        private void LoadSettings(XDocument nuSpecDocument)
+        {
+            // Get processing instruction 
+            var settingsPi = nuSpecDocument.Nodes().OfType<XProcessingInstruction>().Where(pi => pi.Target == "MsBuild.NuGet.Pack").SingleOrDefault();
+
+            if (settingsPi == null) return;
+
+            // Convert processing instruction to element for easy access to attributes
+            XElement settingsElement;
+            try
+            {
+                settingsElement = XElement.Parse("<" + settingsPi.Target + " " + settingsPi.Data + "/>");
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Processing instruction for MsBuild.NuGet.Task has the wrong form.", ex);
+            }
+
+            // Remove processing instruction so settings do not persist into the NuGet package
+            settingsPi.Remove();
+
+            // Walk the settings and assign them to their proper properties
+            foreach (var settingAttribute in settingsElement.Attributes())
+            {
+                try
+                {
+                    switch (settingAttribute.Name.LocalName)
+                    {
+                        case "IncludeBuildVersion":
+                            IncludeBuildVersion = (bool)settingAttribute;
+                            break;
+                        case "UseBuildVersionAsPatch":
+                            UseBuildVersionAsPatch = (bool)settingAttribute;
+                            break;
+                        case "FileExclusionPattern":
+                            FileExclusionPattern = (string)settingAttribute;
+                            break;
+                        case "PackageExclusionPattern":
+                            PackageExclusionPattern = (string)settingAttribute;
+                            break;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    //Do Nothing: just ignore the setting if the data was invalid
+                }
+            }
         }
 
         /// <summary>
