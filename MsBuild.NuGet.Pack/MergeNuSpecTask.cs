@@ -187,9 +187,9 @@
         /// </returns>
         public static Regex GetPackageExclusions(string exclusionPatterns)
         {
-            var regexPatterns = exclusionPatterns.Split(';').Select(x => Regex.Escape(x).Replace(@"\*", ".*").Replace(@"\?", "."));
+            var regexPatterns = exclusionPatterns.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries).Select(x => Regex.Escape(x).Replace(@"\*", ".*").Replace(@"\?", "."));
 
-            return new Regex("^" + String.Join("|", regexPatterns) + "$");
+            return new Regex("^(" + String.Join("|", regexPatterns) + ")$");
         }
 
         /// <summary>
