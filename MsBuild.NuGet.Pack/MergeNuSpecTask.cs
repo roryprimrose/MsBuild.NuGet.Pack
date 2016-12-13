@@ -380,7 +380,7 @@
         private void LoadSettings(XDocument nuSpecDocument)
         {
             // Get processing instruction 
-            var settingsPi = nuSpecDocument.Nodes().OfType<XProcessingInstruction>().Where(pi => pi.Target == "MsBuild.NuGet.Pack").SingleOrDefault();
+            var settingsPi = nuSpecDocument.Nodes().OfType<XProcessingInstruction>().SingleOrDefault(pi => pi.Target == "MsBuild.NuGet.Pack");
 
             if (settingsPi == null) return;
 
@@ -419,7 +419,7 @@
                             break;
                     }
                 }
-                catch(Exception ex)
+                catch(Exception)
                 {
                     //Do Nothing: just ignore the setting if the data was invalid
                 }
