@@ -31,6 +31,8 @@
 
                 var nuSpecDocument = OpenXmlDocument(NuSpecPath);
 
+                LoadSettings(nuSpecDocument);
+
                 MergeMetadata(nuSpecDocument, PrimaryOutputAssembly);
 
                 if (File.Exists(packageConfig))
@@ -172,6 +174,22 @@
 
 
             return packages;
+        }
+
+        /// <summary>
+        ///     Gets a regex that can be used to check package exclusions.
+        /// </summary>
+        /// <param name="exclusionPatterns">
+        ///     The package exclusion patterns.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Regex" />.
+        /// </returns>
+        public static Regex GetPackageExclusions(string exclusionPatterns)
+        {
+            var regexPatterns = exclusionPatterns.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries).Select(x => Regex.Escape(x).Replace(@"\*", ".*").Replace(@"\?", "."));
+
+            return new Regex("^(" + String.Join("|", regexPatterns) + ")$");
         }
 
         /// <summary>
@@ -354,6 +372,61 @@
         }
 
         /// <summary>
+        ///     Loads settings defined in the processing instruction in nuSpecDocument.
+        /// </summary>
+        /// <param name="nuSpecDocument">
+        ///     The nu spec document.
+        /// </param>
+        private void LoadSettings(XDocument nuSpecDocument)
+        {
+            // Get processing instruction 
+            var settingsPi = nuSpecDocument.Nodes().OfType<XProcessingInstruction>().Where(pi => pi.Target == "MsBuild.NuGet.Pack").SingleOrDefault();
+
+            if (settingsPi == null) return;
+
+            // Convert processing instruction to element for easy access to attributes
+            XElement settingsElement;
+            try
+            {
+                settingsElement = XElement.Parse("<" + settingsPi.Target + " " + settingsPi.Data + "/>");
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Processing instruction for MsBuild.NuGet.Task has the wrong form.", ex);
+            }
+
+            // Remove processing instruction so settings do not persist into the NuGet package
+            settingsPi.Remove();
+
+            // Walk the settings and assign them to their proper properties
+            foreach (var settingAttribute in settingsElement.Attributes())
+            {
+                try
+                {
+                    switch (settingAttribute.Name.LocalName)
+                    {
+                        case "IncludeBuildVersion":
+                            IncludeBuildVersion = (bool)settingAttribute;
+                            break;
+                        case "UseBuildVersionAsPatch":
+                            UseBuildVersionAsPatch = (bool)settingAttribute;
+                            break;
+                        case "FileExclusionPattern":
+                            FileExclusionPattern = (string)settingAttribute;
+                            break;
+                        case "PackageExclusionPattern":
+                            PackageExclusionPattern = (string)settingAttribute;
+                            break;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    //Do Nothing: just ignore the setting if the data was invalid
+                }
+            }
+        }
+
+        /// <summary>
         ///     Merges the version.
         /// </summary>
         /// <param name="nuSpecDocument">
@@ -400,12 +473,18 @@
             var packageDependencies = GetProjectPackages(packageConfig);
             var defaultNamespace = nuSpecDocument.Root.GetDefaultNamespace();
 
+            var packageExclusions = GetPackageExclusions(PackageExclusionPattern);
+
             var currentSpecDependencies =
                 specDependencies.Elements().Where(x => x.Name.LocalName == "dependency").ToList();
 
             foreach (var packageDependency in packageDependencies)
             {
                 var id = packageDependency.Attribute("id").Value;
+
+                // Check the package ID against the exclusion list
+                if (packageExclusions.IsMatch(id)) continue; // Skip to the next package
+
                 var version = packageDependency.Attribute("version").Value;
 
                 var specDependency = currentSpecDependencies.SingleOrDefault(x => x.Attribute("id").Value == id);
@@ -522,6 +601,19 @@
         /// </value>
         [Required]
         public string FileExclusionPattern
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets the package exclusion pattern.
+        /// </summary>
+        /// <value>
+        ///     The package exclusion pattern.
+        /// </value>
+        [Required]
+        public string PackageExclusionPattern
         {
             get;
             set;

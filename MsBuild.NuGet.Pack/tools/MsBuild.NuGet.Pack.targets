@@ -26,10 +26,12 @@
   <PropertyGroup>
     <MsBuildNuGetPackImported>true</MsBuildNuGetPackImported>
 
+    <RunNuGetPack Condition="'$(RunNuGetPack)'=='' AND '$(Configuration)'=='Release'">true</RunNuGetPack>
     <RunNuGetPack Condition="'$(RunNuGetPack)'==''">false</RunNuGetPack>
     <IncludeBuildVersion Condition="'$(IncludeBuildVersion)'==''">false</IncludeBuildVersion>
     <UseBuildVersionAsPatch Condition="'$(UseBuildVersionAsPatch)'==''">false</UseBuildVersionAsPatch>
     <FileExclusionPattern Condition="'$(FileExclusionPattern)'==''">*.CodeAnalysisLog.xml;*.lastcodeanalysissucceeded;*Test*.*</FileExclusionPattern>
+    <PackageExclusionPattern Condition="'$(PackageExclusionPattern)'==''">MsBuild.NuGet.Pack</PackageExclusionPattern>
     <PackageVersion></PackageVersion>
     <TargetSpecificFramework Condition="'$(TargetSpecificFramework)'==''">false</TargetSpecificFramework>
 
@@ -75,6 +77,7 @@
       IncludeBuildVersion="$(IncludeBuildVersion)"
       UseBuildVersionAsPatch="$(UseBuildVersionAsPatch)"
       FileExclusionPattern="$(FileExclusionPattern)"
+      PackageExclusionPattern="$(PackageExclusionPattern)"
       TargetFrameworkVersion="$(TargetFrameworkVersion)"
       TargetFrameworkProfile="$(TargetFrameworkProfile)"
       TargetSpecificFramework="$(TargetSpecificFramework)"/>
