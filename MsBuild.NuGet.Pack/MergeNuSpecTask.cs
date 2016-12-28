@@ -6,6 +6,8 @@
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Reflection ;
+    using System.Security.Policy ;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Xml.Linq;
@@ -58,7 +60,30 @@
             return true;
         }
 
-        private string DeterminePackageVersion(string assemblyPath, FileVersionInfo info)
+        private static string GetInformationalVersion(string assemblyPath)
+        {
+            AppDomain temp = AppDomain.CreateDomain ("reflector");
+            temp.SetData ("assemblyPath", assemblyPath);
+
+            temp.DoCallBack (
+                             () =>
+                             {
+                                 Assembly assembly = Assembly.LoadFrom ((string) AppDomain.CurrentDomain.GetData ("assemblyPath"));
+
+                                 var aivas = assembly.GetCustomAttributes (typeof (AssemblyInformationalVersionAttribute), false);
+
+                                 var v = aivas.Length == 0 ? null : ((AssemblyInformationalVersionAttribute) aivas[0])?.InformationalVersion;
+                                 AppDomain.CurrentDomain.SetData ("version", v);
+                             });
+
+            string retval = (string) temp.GetData ("version");
+
+            AppDomain.Unload (temp);
+
+            return retval;
+        }
+
+        private string DeterminePackageVersion(string assemblyPath, string informationalVersion, FileVersionInfo info)
         {
             var version = PackageVersion;
 
@@ -79,11 +104,16 @@
                 return version;
             }
 
+            var isValidInformationalVersion = IsValidVersion (informationalVersion) ;
             var isValidProductVersion = IsValidVersion(info.ProductVersion);
 
             if (IncludeBuildVersion)
             {
-                if (isValidProductVersion)
+                if (isValidInformationalVersion)
+                {
+                    version = informationalVersion ;
+                }
+                else if (isValidProductVersion)
                 {
                     version = info.ProductVersion;
                 }
@@ -94,7 +124,23 @@
             }
             else if (UseBuildVersionAsPatch)
             {
-                if (isValidProductVersion)
+                if (isValidInformationalVersion)
+                {
+                    var ivparts = informationalVersion.Split ('.', '-') ;
+
+                    if (ivparts.Length != 5)
+                    {
+                        // semver format error, default to raw
+                        LogMessage ("Informational version from {0} not in semver format, defaulting to raw", MessageImportance.High, assemblyPath);
+
+                        version = informationalVersion ;
+                    }
+                    else
+                    {
+                        version = ivparts[0] /* major */ + "." + ivparts[1] /* minor */ + "." + ivparts[3] /* private */ + "-" + ivparts[4] /* type */ ;
+                    }
+                }
+                else if (isValidProductVersion)
                 {
                     version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
                 }
@@ -105,7 +151,23 @@
             }
             else
             {
-                if (isValidProductVersion)
+                if (isValidInformationalVersion)
+                {
+                    var ivparts = informationalVersion.Split ('.', '-');
+
+                    if (ivparts.Length != 5)
+                    {
+                        // semver format error, default to raw
+                        LogMessage ("Informational version from {0} not in semver format, defaulting to raw", MessageImportance.High, assemblyPath);
+
+                        version = informationalVersion;
+                    }
+                    else
+                    {
+                        version = ivparts[0] /* major */ + "." + ivparts[1] /* minor */ + "." + ivparts[2] /* build */ + "-" + ivparts[4] /* type */ ;
+                    }
+                }
+                else if (isValidProductVersion)
                 {
                     version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
                 }
@@ -440,11 +502,12 @@
             LogMessage("Merging metadata from " + assemblyPath);
 
             var info = FileVersionInfo.GetVersionInfo(assemblyPath);
+            var informationalVersion = MergeNuSpecTask.GetInformationalVersion (assemblyPath) ;
             var metadata = GetSpecMetadata(nuSpecDocument);
 
             SetElementValue(metadata, "title", info.ProductName);
 
-            var version = DeterminePackageVersion(assemblyPath, info);
+            var version = DeterminePackageVersion(assemblyPath, informationalVersion, info);
 
             SetElementValue(metadata, "version", version);
             SetElementValueIfEmpty(metadata, "summary", info.Comments);
