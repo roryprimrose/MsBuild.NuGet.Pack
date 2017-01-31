@@ -15,7 +15,9 @@
         {
             var processInfo = new ProcessStartInfo(NuGetPath)
             {
-                Arguments = "pack \"" + NuSpecPath + "\" -OutputDirectory \"" + OutDir + " \" -BasePath \"" + OutDir + " \" -NoPackageAnalysis -NonInteractive -Verbosity Detailed",
+                Arguments =
+                    "pack \"" + NuSpecPath + "\" -OutputDirectory \"" + OutDir + " \" -BasePath \"" + NuSpecBasePath +
+                    " \" -NoPackageAnalysis -NonInteractive -Verbosity Detailed",
                 CreateNoWindow = true,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
@@ -98,6 +100,19 @@
         /// </value>
         [Required]
         public string NuGetPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        ///     Gets or sets the base path used for file references in the nuspec file.
+        /// </summary>
+        /// <value>
+        ///     The nuspec base path.
+        /// </value>
+        [Required]
+        public string NuSpecBasePath
         {
             get;
             set;
