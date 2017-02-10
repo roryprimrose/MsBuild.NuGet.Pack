@@ -6,6 +6,8 @@
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Reflection ;
+    using System.Security.Policy ;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Xml.Linq;
@@ -58,7 +60,7 @@
             return true;
         }
 
-        private string DeterminePackageVersion(string assemblyPath, FileVersionInfo info)
+        private string DeterminePackageVersion(string assemblyPath, string informationalVersion, FileVersionInfo info)
         {
             var version = PackageVersion;
 
@@ -79,38 +81,71 @@
                 return version;
             }
 
+            var isValidInformationalVersion = IsValidVersion (informationalVersion) ;
             var isValidProductVersion = IsValidVersion(info.ProductVersion);
+
+            // LogMessage("Informational version: {0}", MessageImportance.Normal, informationalVersion);
 
             if (IncludeBuildVersion)
             {
-                if (isValidProductVersion)
+                if (isValidInformationalVersion)
                 {
+                    LogMessage("Using informational version");
+
+                    version = informationalVersion ;
+                }
+                else if (isValidProductVersion)
+                {
+                    LogMessage ("Using product version");
+
                     version = info.ProductVersion;
                 }
                 else
                 {
+                    LogMessage ("Using file version");
+
                     version = info.FileVersion;
                 }
             }
             else if (UseBuildVersionAsPatch)
             {
-                if (isValidProductVersion)
+                if (isValidInformationalVersion)
                 {
+                    LogMessage ("Using informational version");
+
+                    version = informationalVersion ;
+                }
+                else if (isValidProductVersion)
+                {
+                    LogMessage ("Using product version");
+
                     version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductPrivatePart;
                 }
                 else
                 {
+                    LogMessage ("Using file version");
+
                     version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FilePrivatePart;
                 }
             }
             else
             {
-                if (isValidProductVersion)
+                if (isValidInformationalVersion)
                 {
+                    LogMessage ("Using informational version");
+
+                    version = informationalVersion;
+                }
+                else if (isValidProductVersion)
+                {
+                    LogMessage ("Using product version");
+
                     version = info.ProductMajorPart + "." + info.ProductMinorPart + "." + info.ProductBuildPart;
                 }
                 else
                 {
+                    LogMessage ("Using file version");
+
                     version = info.FileMajorPart + "." + info.FileMinorPart + "." + info.FileBuildPart;
                 }
             }
@@ -118,6 +153,22 @@
             LogMessage("Using version {0} from {1}", MessageImportance.High, version, assemblyPath);
 
             return version;
+        }
+
+        /// <summary>
+        ///     Gets the informational version (from the <see cref="AssemblyInformationalVersionAttribute"/>) of a given assembly.
+        /// </summary>
+        /// <param name="assemblyPath">Path to the assembly.</param>
+        /// <returns>The informational version as a string, or null if there is none.</returns>
+        private static string GetInformationalVersion(string assemblyPath)
+        {
+            Assembly assembly = Assembly.LoadFrom (assemblyPath);
+
+            var aivas = assembly.GetCustomAttributes (typeof (AssemblyInformationalVersionAttribute), false);
+
+            var retval = aivas.Length == 0 ? null : ((AssemblyInformationalVersionAttribute) aivas[0])?.InformationalVersion;
+
+            return retval;
         }
 
         /// <summary>
@@ -329,7 +380,7 @@
         private static bool IsValidVersion(string version)
         {
             // Validates semver v1.0 http://semver.org/spec/v1.0.0.html
-            return Regex.IsMatch(version, @"^\d+.\d+.\d+(-[a-zA-Z0-9-]+)?$");
+            return version != null && Regex.IsMatch(version, @"^\d+.\d+.\d+(-[a-zA-Z0-9-]+)?$");
         }
 
         /// <summary>
@@ -440,11 +491,12 @@
             LogMessage("Merging metadata from " + assemblyPath);
 
             var info = FileVersionInfo.GetVersionInfo(assemblyPath);
+            var informationalVersion = GetInformationalVersion (assemblyPath) ;
             var metadata = GetSpecMetadata(nuSpecDocument);
 
             SetElementValue(metadata, "title", info.ProductName);
 
-            var version = DeterminePackageVersion(assemblyPath, info);
+            var version = DeterminePackageVersion(assemblyPath, informationalVersion, info);
 
             SetElementValue(metadata, "version", version);
             SetElementValueIfEmpty(metadata, "summary", info.Comments);
