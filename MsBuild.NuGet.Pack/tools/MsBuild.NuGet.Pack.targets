@@ -43,6 +43,7 @@
     <TargetNuSpecPath>$(ProjectDirectory)\$(IntermediateOutputPath)\$(NuSpecFileName)</TargetNuSpecPath>
     <NugetPackageTargetDir Condition="'$(NugetPackageTargetDir)' == ''">$(TargetDir)</NugetPackageTargetDir>
     <NuSpecBasePath Condition="'$(NuSpecBasePath)' == ''">$(NugetPackageTargetDir)</NuSpecBasePath>
+    <NugetPackageOutDir Condition="'$(NugetPackageOutDir)' == ''">$(NugetPackageTargetDir)</NugetPackageOutDir>
 
     <RunNuGetPublish Condition="'$(RunNuGetPublish)'==''">false</RunNuGetPublish>
     <NuGetServer Condition="'$(NuGetServer)' == ''"></NuGetServer>
@@ -88,7 +89,7 @@
       NuSpecPath="$(TargetNuSpecPath)"
       NuSpecBasePath="$(NuSpecBasePath)"
       ProjectDirectory="$(ProjectDirectory)"
-      OutDir="$(NugetPackageTargetDir)" />
+      OutDir="$(NugetPackageOutDir)" />
 
   </Target>
 
