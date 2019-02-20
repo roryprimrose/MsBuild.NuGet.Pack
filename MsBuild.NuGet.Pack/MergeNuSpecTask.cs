@@ -304,6 +304,26 @@
                 return "net461";
             }
 
+            if (targetFrameworkVersion == "v4.6.2")
+            {
+                return "net462";
+            }
+
+            if (targetFrameworkVersion == "v4.7")
+            {
+                return "net47";
+            }
+
+            if (targetFrameworkVersion == "v4.7.1")
+            {
+                return "net471";
+            }
+
+            if (targetFrameworkVersion == "v4.7.2")
+            {
+                return "net472";
+            }
+
             // Default to v4.0
             return "net40";
         }
